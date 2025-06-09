@@ -67,6 +67,20 @@ const submitForm = async () => {
         <el-form-item label="食谱描述" prop="description">
           <el-input v-model="recipeForm.description" type="textarea" />
         </el-form-item>
+        <el-form-item label="菜谱故事" prop="story">
+          <el-input
+            v-model="recipeForm.story"
+            type="textarea"
+            :rows="4"
+            placeholder="分享这道菜背后的小故事，让它更有温度"
+          />
+        </el-form-item>
+        
+        <!-- 预览区域 -->
+        <div v-if="recipeForm.story" class="story-preview">
+          <h3>菜谱故事预览</h3>
+          <p>{{ recipeForm.story }}</p>
+        </div>
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="分类" prop="category">
@@ -81,6 +95,7 @@ const submitForm = async () => {
                 <el-option label="困难" value="困难" />
               </el-select>
             </el-form-item>
+            
           </el-col>
           <el-col :span="8">
             <el-form-item label="准备时间">
@@ -88,7 +103,9 @@ const submitForm = async () => {
               <span style="margin-left: 10px;">分钟</span>
             </el-form-item>
           </el-col>
+
         </el-row>
+
 
         <el-divider />
         <h3>食材清单</h3>
@@ -132,5 +149,16 @@ const submitForm = async () => {
   margin-right: 10px;
   font-weight: bold;
   min-width: 60px;
+}
+.story-preview {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  border-left: 4px solid #409EFF;
+}
+.story-preview h3 {
+  color: #333;
+  margin-top: 0;
 }
 </style>

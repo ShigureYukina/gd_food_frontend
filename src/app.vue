@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted } from 'vue';
+import {onMounted} from 'vue';
 import AppHeader from './components/AppHeader.vue';
-import { useGlobalStore } from './store/global';
+import {useGlobalStore} from './store/global';
 
 const globalStore = useGlobalStore();
 
@@ -12,12 +12,12 @@ onMounted(() => {
 
 <template>
   <el-config-provider>
-    <AppHeader />
+    <AppHeader/>
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
-        <component :is="Component" />
+        <component :is="Component"/>
       </transition>
     </router-view>
-    <el-backtop :right="40" :bottom="40" />
+    <el-backtop :right="40" :bottom="40"/>
   </el-config-provider>
 </template>

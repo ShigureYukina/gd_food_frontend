@@ -1,13 +1,147 @@
-export default {
-    recipes: [
-        { id: "recipe-001", title: "家常红烧肉", description: "一道肥而不腻、入口即化的经典中式菜肴。", coverImage: "https://images.unsplash.com/photo-1608371362363-c7882245970c?q=80&w=1920&auto=format&fit=crop", authorId: "user-abcdef", authorName: "美食家小王", createdAt: "2024-05-10T14:00:00Z", category: "家常菜", difficulty: "中等", prepTime: 90, likes: 128, favorites: 45, ingredients: [ { name: "五花肉", quantity: "500克" }, { name: "冰糖", quantity: "50克" }, { name: "生抽", quantity: "3汤匙" }, { name: "老抽", quantity: "1汤匙" }, { name: "料酒", quantity: "2汤匙" }, { name: "葱姜蒜", quantity: "适量" } ], steps: [ { stepNumber: 1, description: "五花肉切块，冷水下锅，加入料酒焯水后捞出冲净。" }, { stepNumber: 2, description: "锅中少许油，放入冰糖炒出糖色，下五花肉翻炒上色。" }, { stepNumber: 3, description: "加入葱姜蒜、生抽、老抽翻炒均匀，倒入开水没过猪肉。" }, { stepNumber: 4, description: "大火烧开转小火，慢炖1小时，最后大火收汁即可。" } ] },
-        { id: "recipe-002", title: "柠檬香草烤鸡", description: "外皮酥脆，肉质多汁，充满柠檬和香草的芬芳。", coverImage: "https://images.unsplash.com/photo-1599227599418-87192b95b550?q=80&w=1920&auto=format&fit=crop", authorId: "user-ghijk", authorName: "西餐大厨李", createdAt: "2024-05-12T18:30:00Z", category: "西餐", difficulty: "简单", prepTime: 75, likes: 250, favorites: 88, ingredients: [ { name: "整鸡", quantity: "1只 (约1.5kg)" }, { name: "柠檬", quantity: "1个" }, { name: "迷迭香", quantity: "2枝" }, { name: "百里香", quantity: "2枝" }, { name: "大蒜", quantity: "1头" }, { name: "橄榄油", quantity: "3汤匙" }, { name: "盐和黑胡椒", quantity: "适量" } ], steps: [ { stepNumber: 1, description: "将鸡内外用厨房纸擦干，均匀抹上盐和黑胡椒。" }, { stepNumber: 2, description: "将柠檬对半切开，一半榨汁，一半和香草、大蒜一同塞入鸡腹中。" }, { stepNumber: 3, description: "将柠檬汁和橄榄油混合，均匀涂抹在鸡的表面。" }, { stepNumber: 4, description: "放入预热至200°C的烤箱，烤约60-70分钟，至表面金黄即可。" } ] },
-        { id: "recipe-003", title: "抹茶提拉米苏", description: "融合了抹茶的微苦和马斯卡彭的香甜，口感轻盈。", coverImage: "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?q=80&w=1920&auto=format&fit=crop", authorId: "user-lmnop", authorName: "甜品爱好者", createdAt: "2024-05-15T11:00:00Z", category: "烘焙", difficulty: "中等", prepTime: 30, likes: 310, favorites: 150, ingredients: [ { name: "马斯卡彭奶酪", quantity: "250克" }, { name: "鸡蛋黄", quantity: "2个" }, { name: "细砂糖", quantity: "50克" }, { name: "淡奶油", quantity: "150毫升" }, { name: "手指饼干", quantity: "适量" }, { name: "抹茶粉", quantity: "15克" }, { name: "温水", quantity: "100毫升" } ], steps: [ { stepNumber: 1, description: "抹茶粉用温水调开备用。手指饼干快速浸泡一下抹茶液，铺在容器底部。" }, { stepNumber: 2, description: "蛋黄加细砂糖隔水加热并不断搅拌，直到颜色变浅、质地变稠。" }, { stepNumber: 3, description: "马斯卡彭奶酪打至顺滑，与蛋黄糊混合均匀。" }, { stepNumber: 4, description: "淡奶油打发至有清晰纹路，分次拌入奶酪糊中，制成提拉米苏糊。" }, { stepNumber: 5, description: "将一半提拉米苏糊倒入容器，再铺一层蘸了抹茶液的手指饼干，倒入剩余的糊，抹平表面。" }, { stepNumber: 6, description: "冷藏至少4小时，食用前在表面筛一层抹茶粉即可。" }] }
-    ],
-    comments: {
-        "recipe-001": [
-            { commentId: "comment-xyz", recipeId: "recipe-001", userId: "user-pqrst", username: "爱学习的厨子", content: "这个菜谱太棒了！跟着做了一次，味道绝了！", createdAt: "2024-05-11T10:30:00Z" },
-            { commentId: "comment-abc", recipeId: "recipe-001", userId: "user-12345", username: "厨房新手", content: "请问没有老抽可以用什么代替吗？", createdAt: "2024-05-11T12:00:00Z" }
+import Mock from "mockjs/dist/mock";
+
+// --- 1. 生成用户数据 (Users Table) ---
+const userCount = 10;
+const users = Mock.mock({
+    [`list|${userCount}`]: [
+        {
+            'UserID|+1': 1,
+
+            'Username': '@cword(2, 4)',
+            'PasswordHash': /[a-z0-9]{60}/,
+            'Email': '@email',
+            'RegistrationTime': '@datetime("yyyy-MM-dd")',
+            'LastLoginTime': function () {
+                // 50% 的概率为 null
+                return Math.random() < 0.5 ? null : Mock.mock('@datetime("yyyy-MM-dd")');
+            }
+        }
+    ]
+}).list;
+
+// --- 2. 生成食谱数据 (Recipes Table) ---
+const recipeCount = 20;
+const recipes = [];
+for (let i = 0; i < recipeCount; i++) {
+    const ingredients = Mock.mock({
+        'list|3-8': [
+            {
+                'name': '@cword(2, 4)',
+                'quantity': '@integer(1, 500)克'
+            }
         ]
+    }).list;
+
+    const steps = Mock.mock({
+        'list|3-6': [
+            {
+                'stepNumber|+1': 1,
+                'description': '@csentence(15, 40)',
+                // 每个步骤可以有自己的图片
+                'image': function () {
+                    return Math.random() < 0.7 ? Mock.mock('@image("800x600", "@color", "#FFF", "Step ' + this.stepNumber + '")') : null;
+                }
+            }
+        ]
+    }).list;
+
+    const imageLinks = Mock.mock({
+        'list|1-5': ['@image("1920x1080", "@color", "#FFF", "Recipe Image")']
+    }).list;
+
+
+    const recipe = {
+        'RecipeID': i + 1,
+        // 从已生成用户中随机选择一个作者
+        'UserID': Mock.Random.pick(users).UserID,
+        'Title': Mock.Random.ctitle(5, 15),
+        'Description': Mock.Random.cparagraph(1),
+        // --- FIX END ---
+        // 根据表结构，将食材和步骤存储为 JSON 字符串
+        'Ingredients': JSON.stringify(ingredients),
+        'Steps': JSON.stringify(steps),
+        'Difficulty': Mock.Random.pick(['简单', '中等', '困难']),
+        'VideoLink': function () {
+            return Math.random() < 0.3 ? 'https://www.example.com/video/' + Mock.Random.word(10) : null;
+        },
+        // 存储多张图片的链接为 JSON 字符串
+        'ImageLinks': JSON.stringify(imageLinks),
+        'UploadTime': Mock.Random.datetime("yyyy-MM-dd"),
+    };
+    recipes.push(recipe);
+}
+
+
+// --- 3. 生成故事数据 (Stories Table) ---
+const stories = recipes.map(recipe => {
+    // 假设每个食谱都有一个故事
+    return Mock.mock({
+        'StoryID|+1': 1,
+        'RecipeID': recipe.RecipeID,
+        'HistoricalContext': '@cparagraph(3, 7)',
+        'CulturalSignificance': function () {
+            return Math.random() < 0.6 ? Mock.mock('@cparagraph(2, 5)') : null;
+        }
+    });
+});
+
+
+// --- 4. 生成评价数据 (Reviews Table) ---
+const reviews = [];
+// 为每个食谱生成 0 到 8 条不等的评价
+recipes.forEach(recipe => {
+    const reviewCount = Mock.Random.integer(0, 8);
+    for (let i = 0; i < reviewCount; i++) {
+        reviews.push(Mock.mock({
+            'ReviewID|+1': (reviews.length + 1),
+            // 从已生成用户中随机选择一个评价者
+            'UserID': Mock.Random.pick(users).UserID,
+            'RecipeID': recipe.RecipeID,
+            'Rating': '@integer(1, 5)',
+            'Comment': function () {
+                return Math.random() < 0.85 ? Mock.mock('@csentence(10, 50)') : null;
+            },
+            'ReviewTime': '@datetime("yyyy-MM-dd")'
+        }));
     }
+});
+
+
+// --- 5. 生成收藏数据 (Collections Table) ---
+const collections = [];
+const collectionSet = new Set(); // 用于确保 (UserID, RecipeID) 组合的唯一性
+
+// 每个用户可以收藏 0 到 15 个不等的食谱
+users.forEach(user => {
+    const collectionCount = Mock.Random.integer(0, Math.floor(recipeCount / 2));
+    const shuffledRecipes = Mock.Random.shuffle([...recipes]); // 打乱食谱顺序以实现随机收藏
+
+    for (let i = 0; i < collectionCount && i < shuffledRecipes.length; i++) {
+        const recipe = shuffledRecipes[i];
+        const uniqueKey = `${user.UserID}-${recipe.RecipeID}`;
+
+        if (!collectionSet.has(uniqueKey)) {
+            collections.push(Mock.mock({
+                'UserID': user.UserID,
+                'RecipeID': recipe.RecipeID,
+                'CollectionTime': '@datetime("yyyy-MM-dd")',
+                'Notes': function () {
+                    return Math.random() < 0.4 ? Mock.mock('@csentence(5, 20)') : null;
+                }
+            }));
+            collectionSet.add(uniqueKey);
+        }
+    }
+});
+
+
+// --- 导出所有模拟数据 ---
+const mockData = {
+    users,
+    recipes,
+    stories,
+    reviews,
+    collections
 };
+
+export default mockData;

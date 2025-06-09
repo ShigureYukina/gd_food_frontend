@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { useRecipeStore } from '@/store/recipe';
+import {ref, computed} from 'vue';
+import {useRecipeStore} from '@/store/recipe';
 
 const props = defineProps({
   recipeId: {
@@ -22,8 +22,10 @@ const submitComment = () => {
 };
 
 const formatTime = (isoString) => {
-  return new Date(isoString).toLocaleString();
-}
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return isNaN(date.getTime()) ? '' : date.toLocaleString();
+};
 </script>
 
 <template>
@@ -32,13 +34,18 @@ const formatTime = (isoString) => {
     <el-card v-if="comments.length > 0" class="comment-list">
       <div v-for="comment in comments" :key="comment.commentId" class="comment-item">
         <div class="comment-header">
-          <strong><el-icon><UserFilled /></el-icon> {{ comment.username }}</strong>
-          <span class="time">{{ formatTime(comment.createdAt) }}</span>
+          <strong>
+            <el-icon>
+              <UserFilled/>
+            </el-icon>
+            {{ comment.username }}</strong>
+          <span class="time">{{comment.createdAt }}</span>
         </div>
+        <el-rate v-model="comment.rating" disabled style="margin-bottom: 10px;"/>
         <p class="comment-content">{{ comment.content }}</p>
       </div>
     </el-card>
-    <el-empty v-else description="暂无评论，快来抢沙发吧！" />
+    <el-empty v-else description="暂无评论，快来抢沙发吧！"/>
 
     <div class="add-comment">
       <el-input
@@ -56,35 +63,43 @@ const formatTime = (isoString) => {
 .comment-section {
   margin-top: 40px;
 }
+
 .comment-list {
   margin-top: 20px;
 }
+
 .comment-item {
   border-bottom: 1px solid var(--border-color);
   padding: 15px 0;
 }
+
 .comment-item:last-child {
   border-bottom: none;
 }
+
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .comment-header strong {
   display: flex;
   align-items: center;
   gap: 5px;
 }
+
 .time {
   font-size: 0.8em;
   color: #999;
 }
+
 .comment-content {
   margin: 0;
   line-height: 1.6;
 }
+
 .add-comment {
   margin-top: 20px;
 }
