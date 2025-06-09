@@ -1,67 +1,47 @@
-/* src/assets/main.css */
-
-.highlighted-text {
-	/* 这个自定义指令的样式可以保留 */
-	background-color: var(--el-color-warning-light-7);
-	/* 使用 Element Plus 警告色系的浅色 */
-	font-weight: bold;
-	padding: 0 2px;
-	border-radius: var(--el-border-radius-small);
+/* Global styles and dark mode */
+:root {
+    --bg-color: #f4f5f7;
+    --text-color: #303133;
+    --card-bg-color: #ffffff;
+    --border-color: #e4e7ed;
+    --header-bg-color: #ffffff;
+    --el-color-primary: #409eff;
 }
 
-/* 全局内容区域 prose 样式 (如果 AboutPage 等页面需要) */
-.prose {
-	line-height: 1.7;
-	color: var(--el-text-color-regular);
+html.dark {
+    --bg-color: #141414;
+    --text-color: #e5e5e5;
+    --card-bg-color: #1d1d1d;
+    --border-color: #424242;
+    --header-bg-color: #1a1a1a;
+    --el-color-primary: #79bbff;
 }
 
-.prose h1,
-.prose h2,
-.prose h3 {
-	color: var(--el-text-color-primary);
-	font-weight: 600;
-	margin-top: 1.5em;
-	margin-bottom: 0.8em;
+body {
+    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-.prose h1 {
-	font-size: var(--el-font-size-extra-large);
+#app {
+    padding-top: 60px; /* Space for fixed header */
 }
 
-.prose h2 {
-	font-size: var(--el-font-size-large);
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
-.prose h3 {
-	font-size: var(--el-font-size-medium);
+/* Router transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
 }
 
-.prose p {
-	margin-bottom: 1em;
-}
-
-.prose ul,
-.prose ol {
-	margin-left: 1.5em;
-	margin-bottom: 1em;
-}
-
-.prose li {
-	margin-bottom: 0.5em;
-}
-
-.prose a {
-	color: var(--el-color-primary);
-	text-decoration: none;
-}
-
-.prose a:hover {
-	text-decoration: underline;
-}
-
-.prose code {
-	background-color: var(--el-fill-color-light);
-	padding: 0.2em 0.4em;
-	border-radius: var(--el-border-radius-small);
-	font-size: 0.9em;
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
