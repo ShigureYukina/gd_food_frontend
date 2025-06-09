@@ -1,0 +1,67 @@
+/* src/assets/main.css */
+
+.highlighted-text {
+	/* 这个自定义指令的样式可以保留 */
+	background-color: var(--el-color-warning-light-7);
+	/* 使用 Element Plus 警告色系的浅色 */
+	font-weight: bold;
+	padding: 0 2px;
+	border-radius: var(--el-border-radius-small);
+}
+
+/* 全局内容区域 prose 样式 (如果 AboutPage 等页面需要) */
+.prose {
+	line-height: 1.7;
+	color: var(--el-text-color-regular);
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+	color: var(--el-text-color-primary);
+	font-weight: 600;
+	margin-top: 1.5em;
+	margin-bottom: 0.8em;
+}
+
+.prose h1 {
+	font-size: var(--el-font-size-extra-large);
+}
+
+.prose h2 {
+	font-size: var(--el-font-size-large);
+}
+
+.prose h3 {
+	font-size: var(--el-font-size-medium);
+}
+
+.prose p {
+	margin-bottom: 1em;
+}
+
+.prose ul,
+.prose ol {
+	margin-left: 1.5em;
+	margin-bottom: 1em;
+}
+
+.prose li {
+	margin-bottom: 0.5em;
+}
+
+.prose a {
+	color: var(--el-color-primary);
+	text-decoration: none;
+}
+
+.prose a:hover {
+	text-decoration: underline;
+}
+
+.prose code {
+	background-color: var(--el-fill-color-light);
+	padding: 0.2em 0.4em;
+	border-radius: var(--el-border-radius-small);
+	font-size: 0.9em;
+}
