@@ -6,7 +6,6 @@ const users = Mock.mock({
     [`list|${userCount}`]: [
         {
             'UserID|+1': 1,
-
             'Username': '@cword(2, 4)',
             'PasswordHash': /[a-z0-9]{60}/,
             'Email': '@email',
@@ -52,13 +51,12 @@ for (let i = 0; i < recipeCount; i++) {
 
     const recipe = {
         'RecipeID': i + 1,
-        // 从已生成用户中随机选择一个作者
         'UserID': Mock.Random.pick(users).UserID,
         'Title': Mock.Random.ctitle(5, 15),
         'Description': Mock.Random.cparagraph(1),
-        // --- FIX END ---
-        // 根据表结构，将食材和步骤存储为 JSON 字符串
         'Ingredients': JSON.stringify(ingredients),
+        'RecipetypeId':  Mock.Random.pick([1, 2, 3, 4, 5]),
+        'RecipetypeName':  Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']),
         'Steps': JSON.stringify(steps),
         'Difficulty': Mock.Random.pick(['简单', '中等', '困难']),
         'VideoLink': function () {

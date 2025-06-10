@@ -23,10 +23,7 @@ onMounted(() => {
   recipeStore.fetchRecipes();
 });
 
-// 透過 ID 獲取食譜數據
 const recipe = computed(() => recipeStore.getRecipeById(props.id));
-
-// 獲取點讚和收藏的狀態
 const isLiked = computed(() => recipeStore.isLiked(props.id));
 const isFavorite = computed(() => recipeStore.isFavorite(props.id));
 
@@ -45,7 +42,9 @@ const isFavorite = computed(() => recipeStore.isFavorite(props.id));
             <div class="meta">
               <span>作者: {{ recipe.authorName }}</span>
               <span>难度: {{ recipe.difficulty }}</span>
-<!--              <span>耗时: {{ recipe.prepTime }} 分钟</span>-->
+              <!-- 新增分类显示 -->
+              <span>分类ID: {{ recipe.recipetypeid || '未知ID' }}</span>
+              <span>分类名称: {{ recipe.recipetypename || '未知类型' }}</span>
             </div>
             <div class="recipe-detail-content">
               <p class="description">{{ recipe.description }}</p>

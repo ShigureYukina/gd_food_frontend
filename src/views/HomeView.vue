@@ -8,11 +8,13 @@ import Carousel from "@/components/Carousel.vue";
 const recipeStore = useRecipeStore();
 const route = useRoute();
 
-const category = ref('');
+
+const category = ref('全部');
 const searchQuery = ref(route.query.search || '');
 
+
 const categories = computed(() => {
-  const all = new Set(recipeStore.recipes.map(r => r.category));
+  const all = new Set(recipeStore.recipes.map(r => r.recipetypename || '未知类型'));
   return ['全部', ...all];
 });
 
@@ -20,9 +22,10 @@ const filteredRecipes = computed(() => {
   let recipes = recipeStore.recipes;
 
   if (category.value && category.value !== '全部') {
-    recipes = recipes.filter(r => r.category === category.value);
+    recipes = recipes.filter(r => (r.recipetypename || '未知类型') === category.value);
   }
 
+  // Filter by search query
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     recipes = recipes.filter(r => r.title.toLowerCase().includes(query));
@@ -34,12 +37,18 @@ const filteredRecipes = computed(() => {
 onMounted(() => {
   recipeStore.fetchRecipes();
 });
+
+// Optional: A handler for the change event if you need to perform actions other than filtering.
+// 新增导出函数
 </script>
 
 <template>
   <el-container class="home-view">
     <el-main>
+      <!-- 添加导出按钮 -->
+
       <carousel :items="recipeStore.carouselItems"/>
+
       <el-affix :offset="60">
         <div class="filter-bar">
           <el-radio-group v-model="category">
@@ -80,17 +89,7 @@ onMounted(() => {
   border: 1px solid var(--border-color);
 }
 
-
 .loading-state {
   height: 50vh;
 }
-
-.el-carousel__item h3 {
-  color: #475669;
-  opacity: 0.75;
-  line-height: 200px;
-  margin: 0;
-  text-align: center;
-}
-
 </style>

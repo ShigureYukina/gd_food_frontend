@@ -28,6 +28,8 @@ defineProps({
         <div class="meta">
           <span><el-icon><User/></el-icon> {{ recipe.authorName }}</span>
           <span><el-icon><Calendar/></el-icon> {{ recipe.createdAt }}</span>
+          <!-- 新增分类显示 -->
+          <span><el-icon><FolderOpened/></el-icon> {{ recipe.recipetypename || '未知类型' }}</span>
         </div>
         <div class="stats">
           <span><el-icon><Star/></el-icon> {{ recipe.favorites }}</span>

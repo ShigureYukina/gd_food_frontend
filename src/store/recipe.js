@@ -13,7 +13,7 @@ export const useRecipeStore = defineStore("recipe", {
     }),
     getters: {
         getRecipeById: (state) => (id) => {
-            // 注意：ID可能是数字或字符串，进行统一比较
+            // Note: ID can be a number or a string, so we compare them uniformly
             return state.recipes.find(r => String(r.id) === String(id));
         },
         getCommentsByRecipeId: (state) => (recipeId) => {
@@ -31,25 +31,25 @@ export const useRecipeStore = defineStore("recipe", {
     },
     actions: {
         async fetchRecipes() {
-            if (this.recipes.length > 0) return; // 避免重复获取
+            if (this.recipes.length > 0) return; // Avoid duplicate fetching
             this.isLoading = true;
             try {
-                // 模拟API调用
+                // Simulate API call
                 await new Promise(res => setTimeout(res, 500));
 
-                // 1. 创建用户ID到用户名的映射表，提高效率
+                // 1. Create a user ID to username map for efficiency
                 const userMap = MOCK_DATA.users.reduce((acc, user) => {
                     acc[user.UserID] = user.Username;
                     return acc;
                 }, {});
 
-                // 2. 计算每个食谱的初始收藏数
+                // 2. Calculate initial favorite counts for each recipe
                 const favoriteCounts = MOCK_DATA.collections.reduce((acc, collection) => {
                     acc[collection.RecipeID] = (acc[collection.RecipeID] || 0) + 1;
                     return acc;
                 }, {});
 
-                // 3. 转换食谱数据
+                // 3. Transform recipe data
                 this.recipes = MOCK_DATA.recipes.map(recipe => {
                     let coverImage = `https://placehold.co/600x400/cccccc/ffffff?text=${encodeURI(recipe.Title)}`;
                     try {
@@ -58,27 +58,29 @@ export const useRecipeStore = defineStore("recipe", {
                             coverImage = images[0];
                         }
                     } catch (e) {
-                        console.error(`解析食谱 ${recipe.RecipeID} 的图片链接时出错:`, e);
+                        console.error(`Error parsing image links for recipe ${recipe.RecipeID}:`, e);
                     }
 
                     return {
                         id: recipe.RecipeID,
                         title: recipe.Title,
                         description: recipe.Description,
+                        recipetypeid : recipe.RecipetypeId,
+                        recipetypename: recipe.RecipetypeName,
                         ingredients: JSON.parse(recipe.Ingredients),
                         steps: JSON.parse(recipe.Steps),
                         difficulty: recipe.Difficulty,
                         createdAt: recipe.UploadTime,
                         authorId: recipe.UserID,
-                        authorName: userMap[recipe.UserID] || '匿名用户',
+                        authorName: userMap[recipe.UserID] || 'Anonymous',
                         coverImage: coverImage,
                         likes: Math.floor(Math.random() * 200),
                         favorites: favoriteCounts[recipe.RecipeID] || 0,
                     };
                 });
 
-                // 4. 转换评论数据
-                const commentsByRecipeId = MOCK_DATA.reviews.reduce((acc, review) => {
+                // 4. Transform comment data
+                this.comments = MOCK_DATA.reviews.reduce((acc, review) => {
                     const {RecipeID} = review;
                     if (!acc[RecipeID]) {
                         acc[RecipeID] = [];
@@ -87,18 +89,17 @@ export const useRecipeStore = defineStore("recipe", {
                         commentId: review.ReviewID,
                         recipeId: review.RecipeID,
                         userId: review.UserID,
-                        username: userMap[review.UserID] || '匿名用户',
+                        username: userMap[review.UserID] || 'Anonymous',
                         content: review.Comment,
-                        createdAt: review.ReviewTime, // MODIFIED: 直接使用 yyyy-MM-dd 格式日期字符串
+                        createdAt: review.ReviewTime,
                         rating: review.Rating,
                     });
                     return acc;
                 }, {});
-                this.comments = commentsByRecipeId;
 
             } catch (error) {
-                console.error('获取食谱或处理数据时出错:', error);
-                ElMessage.error('获取食谱数据失败，请稍后重试。');
+                console.error('Error fetching or processing data:', error);
+                ElMessage.error('Failed to fetch recipe data. Please try again later.');
             } finally {
                 this.isLoading = false;
             }
@@ -109,14 +110,14 @@ export const useRecipeStore = defineStore("recipe", {
                 id: 'recipe-' + Date.now(),
                 ...recipeData,
                 authorId: globalStore.userId,
-                authorName: "我",
-                createdAt: new Date().toISOString().slice(0, 10), // MODIFIED: 生成 yyyy-MM-dd 格式日期字符串
+                authorName: "Me",
+                createdAt: new Date().toISOString().slice(0, 10),
                 likes: 0,
                 favorites: 0,
                 coverImage: `https://placehold.co/600x400/cccccc/ffffff?text=${encodeURI(recipeData.title)}`
             };
             this.recipes.unshift(newRecipe);
-            ElMessage.success('食谱分享成功！');
+            ElMessage.success('Recipe shared successfully!');
         },
         addComment(recipeId, commentContent) {
             const globalStore = useGlobalStore();
@@ -124,16 +125,16 @@ export const useRecipeStore = defineStore("recipe", {
                 commentId: 'comment-' + Date.now(),
                 recipeId,
                 userId: globalStore.userId,
-                username: '我',
+                username: 'Me',
                 content: commentContent,
-                createdAt: new Date().toISOString().slice(0, 10), // MODIFIED: 生成 yyyy-MM-dd 格式日期字符串
+                createdAt: new Date().toISOString().slice(0, 10),
             };
 
             if (!this.comments[recipeId]) {
                 this.comments[recipeId] = [];
             }
             this.comments[recipeId].push(newComment);
-            ElMessage.success('评论成功');
+            ElMessage.success('Comment posted successfully');
         },
         toggleLike(recipeId) {
             const index = this.likedRecipeIds.indexOf(recipeId);
@@ -144,7 +145,7 @@ export const useRecipeStore = defineStore("recipe", {
             } else {
                 this.likedRecipeIds.push(recipeId);
                 if (recipe) recipe.likes++;
-                ElMessage({message: '点赞成功!', type: 'success', plain: true});
+                ElMessage({message: 'Liked!', type: 'success', plain: true});
             }
             localStorage.setItem('likedRecipeIds', JSON.stringify(this.likedRecipeIds));
         },
@@ -154,11 +155,11 @@ export const useRecipeStore = defineStore("recipe", {
             if (index > -1) {
                 this.favoriteRecipeIds.splice(index, 1);
                 if (recipe) recipe.favorites--;
-                ElMessage({message: '已取消收藏', type: 'warning', plain: true});
+                ElMessage({message: 'Removed from favorites', type: 'warning', plain: true});
             } else {
                 this.favoriteRecipeIds.push(recipeId);
                 if (recipe) recipe.favorites++;
-                ElMessage({message: '收藏成功', type: 'success', plain: true});
+                ElMessage({message: 'Added to favorites', type: 'success', plain: true});
             }
             localStorage.setItem('favoriteRecipeIds', JSON.stringify(this.favoriteRecipeIds));
         },
