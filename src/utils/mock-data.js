@@ -1,25 +1,52 @@
 import Mock from "mockjs/dist/mock";
 
 // --- 1. 生成用户数据 (Users Table) ---
-const userCount = 10;
-const users = Mock.mock({
+
+// 定义一个固定的管理员用户
+const adminUser = {
+    'UserID': 0,
+    'Username': 'Admin',
+    'Password': 'admin',
+    'Email': 'admin@example.com',
+    'RegistrationTime': '2023-01-01',
+    'LastLoginTime': Mock.mock('@now("yyyy-MM-dd")'),
+    'Avatar': 'https://i.pravatar.cc/150?u=admin',
+    'Bio': '网站的官方管理员账户。',
+    'Followers': 9999,
+    'RecipesPublished': 5, // 假设管理员也发布了一些内容
+    'isAdmin': true // 添加一个管理员标识
+};
+
+// 生成普通用户
+const userCount = 49; // 生成 49 个普通用户，加上管理员共 50 个
+const regularUsers = Mock.mock({
     [`list|${userCount}`]: [
         {
+            'isAdmin': false,
             'UserID|+1': 1,
-            'Username': '@cword(2, 4)',
-            'PasswordHash': /[a-z0-9]{60}/,
+            'Username': '@cword(2, 4)', // 中文用户名
+            'Password': /[a-z][0-10](10)/,
             'Email': '@email',
             'RegistrationTime': '@datetime("yyyy-MM-dd")',
             'LastLoginTime': function () {
-                // 50% 的概率为 null
                 return Math.random() < 0.5 ? null : Mock.mock('@datetime("yyyy-MM-dd")');
-            }
+            },
+            'Avatar': function () {
+                // 使用 UserID 确保每个用户头像唯一
+                return `https://i.pravatar.cc/150?u=${this.UserID}`;
+            },
+            'Bio': '@csentence(10, 30)', // 简介
+            'Followers|0-1000': 1, // 关注者数量
         }
     ]
 }).list;
 
+// 将管理员和普通用户合并
+const users = [adminUser, ...regularUsers];
+
+
 // --- 2. 生成食谱数据 (Recipes Table) ---
-const recipeCount = 20;
+const recipeCount = 50;
 const recipes = [];
 for (let i = 0; i < recipeCount; i++) {
     const ingredients = Mock.mock({
@@ -36,7 +63,6 @@ for (let i = 0; i < recipeCount; i++) {
             {
                 'stepNumber|+1': 1,
                 'description': '@csentence(15, 40)',
-                // 每个步骤可以有自己的图片
                 'image': function () {
                     return Math.random() < 0.7 ? Mock.mock('@image("800x600", "@color", "#FFF", "Step ' + this.stepNumber + '")') : null;
                 }
@@ -55,14 +81,13 @@ for (let i = 0; i < recipeCount; i++) {
         'Title': Mock.Random.ctitle(5, 15),
         'Description': Mock.Random.cparagraph(1),
         'Ingredients': JSON.stringify(ingredients),
-        'RecipetypeId':  Mock.Random.pick([1, 2, 3, 4, 5]),
-        'RecipetypeName':  Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']),
+        'RecipetypeId': Mock.Random.pick([1, 2, 3, 4, 5]),
+        'RecipetypeName': Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']),
         'Steps': JSON.stringify(steps),
         'Difficulty': Mock.Random.pick(['简单', '中等', '困难']),
         'VideoLink': function () {
             return Math.random() < 0.3 ? 'https://www.example.com/video/' + Mock.Random.word(10) : null;
         },
-        // 存储多张图片的链接为 JSON 字符串
         'ImageLinks': JSON.stringify(imageLinks),
         'UploadTime': Mock.Random.datetime("yyyy-MM-dd"),
     };
@@ -72,7 +97,6 @@ for (let i = 0; i < recipeCount; i++) {
 
 // --- 3. 生成故事数据 (Stories Table) ---
 const stories = recipes.map(recipe => {
-    // 假设每个食谱都有一个故事
     return Mock.mock({
         'StoryID|+1': 1,
         'RecipeID': recipe.RecipeID,
@@ -86,13 +110,11 @@ const stories = recipes.map(recipe => {
 
 // --- 4. 生成评价数据 (Reviews Table) ---
 const reviews = [];
-// 为每个食谱生成 0 到 8 条不等的评价
 recipes.forEach(recipe => {
     const reviewCount = Mock.Random.integer(0, 8);
     for (let i = 0; i < reviewCount; i++) {
         reviews.push(Mock.mock({
             'ReviewID|+1': (reviews.length + 1),
-            // 从已生成用户中随机选择一个评价者
             'UserID': Mock.Random.pick(users).UserID,
             'RecipeID': recipe.RecipeID,
             'Rating': '@integer(1, 5)',
@@ -107,12 +129,10 @@ recipes.forEach(recipe => {
 
 // --- 5. 生成收藏数据 (Collections Table) ---
 const collections = [];
-const collectionSet = new Set(); // 用于确保 (UserID, RecipeID) 组合的唯一性
-
-// 每个用户可以收藏 0 到 15 个不等的食谱
+const collectionSet = new Set();
 users.forEach(user => {
     const collectionCount = Mock.Random.integer(0, Math.floor(recipeCount / 2));
-    const shuffledRecipes = Mock.Random.shuffle([...recipes]); // 打乱食谱顺序以实现随机收藏
+    const shuffledRecipes = Mock.Random.shuffle([...recipes]);
 
     for (let i = 0; i < collectionCount && i < shuffledRecipes.length; i++) {
         const recipe = shuffledRecipes[i];

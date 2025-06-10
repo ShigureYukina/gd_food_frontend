@@ -30,12 +30,24 @@ const router = createRouter({
             meta: {title: '我的收藏'}
         },
         {
+            path: '/login-register',
+            name: 'auth',
+            component: () => import('../views/AuthView.vue'),
+            meta: {title: '登录 / 注册'}
+        },
+        {path: '/search',
+            name: 'search',
+            component: () => import('../views/SearchResultsView.vue'),
+            meta: {title: '搜索结果'}
+        },
+        {
             path: '/:pathMatch(.*)*',
             name: 'NotFound',
             component: () => import('../views/NotFoundView.vue'),
             meta: {title: '404 - 页面未找到'}
         }
     ],
+    // This function ensures the page scrolls to the top on navigation.
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition;
@@ -45,6 +57,7 @@ const router = createRouter({
     },
 })
 
+// Update the document title after each navigation.
 router.afterEach((to) => {
     document.title = to.meta.title || '食谱分享论坛';
 });
