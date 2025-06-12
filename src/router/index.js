@@ -32,7 +32,7 @@ const router = createRouter({
         {
             path: '/login-register',
             name: 'auth',
-            component: () => import('../views/AuthView.vue'),
+            component: () => import('../../../news/frontend/src/views/AuthView.vue'),
             meta: {title: '登录 / 注册'}
         },
         {path: '/search',
