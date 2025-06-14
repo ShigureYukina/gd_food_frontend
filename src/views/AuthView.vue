@@ -1,3 +1,118 @@
+<script setup>
+import {ref} from 'vue';
+import {ElMessage} from 'element-plus';
+import VerifyCode from '@/components/VerifyCode.vue';
+import {useGlobalStore} from '@/store/global';
+import mockData from '@/utils/mock-data.js';
+import {useRouter} from 'vue-router'; // Import useRouter
+
+const router = useRouter(); // Initialize useRouter
+const isLogin = ref(true);
+const correctCode = ref('');
+const loginForm = ref({
+  usernameOrEmail: '',
+  password: '',
+  verifyCode: '',
+});
+const registerForm = ref({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+});
+
+const globalStore = useGlobalStore();
+
+const redirectToHome = () => {
+  router.push({name: 'home'});
+};
+
+const handleLogin = () => {
+  if (!loginForm.value.verifyCode) {
+    ElMessage.error('请输入验证码');
+    return;
+  }
+  if (loginForm.value.verifyCode.toLowerCase() !== correctCode.value.toLowerCase()) {
+    ElMessage.error('验证码不正确，请重试');
+    return;
+  }
+
+  // 模拟登录验证
+  const user = mockData.users.find(user =>
+      user.Username === loginForm.value.usernameOrEmail ||
+      user.Email === loginForm.value.usernameOrEmail
+  );
+
+  if (user && user.Password === loginForm.value.password) {
+    globalStore.login(user);
+    ElMessage.success('登录成功');
+    redirectToHome(); // <--- Add redirection here
+  } else {
+    ElMessage.error('用户名/邮箱或密码不正确');
+  }
+};
+
+const handleRegister = () => {
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致');
+    return;
+  }
+
+  // 模拟注册
+  const newUser = {
+    UserID: (mockData.users.length + 1).toString(), // Ensure UserID is a string for consistency
+    Username: registerForm.value.username,
+    Email: registerForm.value.email,
+    Password: registerForm.value.password,
+    Bio: '',
+    Avatar: 'https://picsum.photos/200/200?random=' + Math.random(),
+    isAdmin: false
+  };
+
+  // Add to mock data (in a real app, this would be an API call)
+  mockData.users.push(newUser);
+
+  globalStore.login(newUser);
+  ElMessage.success('注册成功');
+  redirectToHome(); // <--- Add redirection here
+};
+
+const handleForgotPassword = () => {
+  ElMessage.info('忘记密码功能暂未实现');
+};
+
+// 普通用户登录
+const loginAsUser = () => {
+  const regularUsers = mockData.users.filter(user => !user.isAdmin);
+
+  if (regularUsers.length === 0) {
+    ElMessage.error('没有可用的普通用户账户');
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * regularUsers.length);
+  const randomUser = regularUsers[randomIndex];
+
+  globalStore.login(randomUser);
+  ElMessage.success(`已作为用户 ${randomUser.Username} 登录`);
+  redirectToHome(); // <--- Add redirection here
+};
+
+// 管理员登录
+const loginAsAdmin = () => {
+  const adminUser = mockData.users.find(user => user.isAdmin);
+
+  if (!adminUser) {
+    ElMessage.error('未找到管理员账户');
+    return;
+  }
+
+  globalStore.login(adminUser);
+  ElMessage.success('已以管理员身份登录');
+  redirectToHome();
+};
+</script>
+
 <template>
   <div class="auth-container">
     <el-row justify="center" align="middle" style="height: 100vh;">
@@ -20,7 +135,6 @@
             </el-button-group>
           </div>
 
-          <!-- Login Form -->
           <transition name="fade" mode="out-in">
             <div v-if="isLogin" key="login" class="form-container">
               <el-form label-position="top" :model="loginForm" ref="loginRef">
@@ -32,7 +146,6 @@
                   <el-input v-model="loginForm.password" type="password" show-password placeholder="请输入密码"
                             size="large"/>
                 </el-form-item>
-                <!-- FIX: Added verification code section -->
                 <el-form-item label="验证码">
                   <div class="verify-code-container">
                     <el-input v-model="loginForm.verifyCode" placeholder="请输入验证码" size="large"/>
@@ -42,15 +155,13 @@
                 <el-button type="primary" @click="handleLogin" class="auth-button">立即登录</el-button>
                 <el-button type="text" @click="handleForgotPassword" class="forgot-password-button">忘记密码？
                 </el-button>
-                <!-- 新增：以普通用户和管理员身份登录的按钮 -->
                 <div class="user-role-buttons">
-                  <el-button @click="loginAsUser" class="role-button user">以普通用户身份登录</el-button>
+                  <el-button @click="loginAsUser" class="role-button user">随机用户登录</el-button>
                   <el-button @click="loginAsAdmin" class="role-button admin">以管理员身份登录</el-button>
                 </div>
               </el-form>
             </div>
 
-            <!-- Register Form -->
             <div v-else key="register" class="form-container">
               <el-form label-position="top" :model="registerForm" ref="registerRef">
                 <h2 class="auth-title">创建新账户</h2>
@@ -77,98 +188,6 @@
     </el-row>
   </div>
 </template>
-
-<script setup>
-import {ref} from 'vue';
-import {ElMessage} from 'element-plus';
-import VerifyCode from '@/components/VerifyCode.vue'; // FIX: Import the component
-import {useGlobalStore} from '@/store/global';
-
-// State to toggle between login and register
-const isLogin = ref(true);
-
-// FIX: Added refs for verification code
-const correctCode = ref(''); // Stores the correct code from the component
-const loginForm = ref({
-  usernameOrEmail: '',
-  password: '',
-  verifyCode: '', // Field for user input
-});
-
-// Register form data
-const registerForm = ref({
-  username: '',
-  email: '',
-  password: '',
-  confirmPassword: ''
-});
-
-// Handle login logic
-const handleLogin = () => {
-  // FIX: Add verification code validation
-  if (!loginForm.value.verifyCode) {
-    ElMessage.error('请输入验证码');
-    return;
-  }
-  if (loginForm.value.verifyCode.toLowerCase() !== correctCode.value.toLowerCase()) {
-    ElMessage.error('验证码不正确，请重试');
-    // Optionally, refresh the code
-    // Note: This would require exposing the refresh method from the child component
-    return;
-  }
-  console.log('Attempting to log in:', loginForm.value);
-  // TODO: Implement login API call
-  ElMessage.success('登录成功（模拟）');
-};
-
-// Handle register logic
-const handleRegister = () => {
-  if (registerForm.value.password !== registerForm.value.confirmPassword) {
-    ElMessage.error('两次输入的密码不一致');
-    return;
-  }
-  console.log('Attempting to register:', registerForm.value);
-  // TODO: Implement register API call
-  ElMessage.success('注册成功（模拟）');
-};
-
-const handleForgotPassword = () => {
-  ElMessage.info('忘记密码功能暂未实现');
-};
-
-// 新增：模拟以普通用户身份登录
-const globalStore = useGlobalStore();
-const loginAsUser = () => {
-  const mockUser = {
-    UserID: 1,
-    Username: 'testuser',
-    Email: 'user@example.com',
-    PasswordHash: 'password123',
-    UserRole: 0, // 0 表示普通用户
-    Avatar: 'https://via.placeholder.com/100',
-    Bio: '这是一个普通用户',
-    RecipesPublished: 5
-  };
-  globalStore.login(mockUser);
-  ElMessage.success('已以普通用户身份登录');
-};
-
-// 新增：模拟以管理员身份登录
-const loginAsAdmin = () => {
-  const mockAdmin = {
-    UserID: 0,
-    Username: 'admin',
-    Email: 'admin@example.com',
-    PasswordHash: 'admin123',
-    UserRole: 1, // 1 表示管理员
-    Avatar: 'https://via.placeholder.com/100',
-    Bio: '系统管理员',
-    RecipesPublished: 10
-  };
-  globalStore.login(mockAdmin);
-  ElMessage.success('已以管理员身份登录');
-};
-</script>
 
 <style scoped>
 .auth-container {
@@ -279,7 +298,6 @@ html.dark .auth-container {
   min-height: 500px;
 }
 
-/* FIX: Styles for the verification code container */
 .verify-code-container {
   display: flex;
   align-items: center;
@@ -292,10 +310,7 @@ html.dark .auth-container {
 .verify-code-img {
   height: 40px;
   width: 170px;
-}
-
-.verify-code-container .el-input {
-  flex-grow: 1;
+  margin-left: 10px; /* Add some space between input and image */
 }
 
 .forgot-password-button {

@@ -1,42 +1,46 @@
 <script setup>
 import {ref, computed} from 'vue';
+import {useRouter, useRoute} from 'vue-router';
 import {useGlobalStore} from '@/store/global';
-import {useRouter} from 'vue-router';
-// 导入所有需要的图标组件
 import {ForkSpoon, Search, Moon, Sunny} from '@element-plus/icons-vue';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
+const route = useRoute();
 const searchInput = ref('');
+
+const activeMenuIndex = computed(() => {
+  // 当路由为 /profile/:userId 时，也高亮 /profile
+  if (route.path.startsWith('/profile')) {
+    return '/profile';
+  }
+  return route.path;
+});
 
 const handleSearch = () => {
   if (!searchInput.value.trim()) {
     return;
   }
-  // 修正: 将查询参数从 'search' 修改为 'q'，使URL更简洁 (例如: /search?q=keyword)
   router.push({name: 'search-results', query: {q: searchInput.value}});
   searchInput.value = '';
 };
 
-// 处理个人资料点击事件
+// 使用编程式导航处理个人资料点击
 const handleProfile = () => {
-  router.push({name: 'profile'});
+  const userId = globalStore.userId;
+  if (userId !== null && userId !== undefined) {
+    router.push({name: 'profile', params: {userId: userId}});
+  } else {
+    console.error("用户ID在store中不可用，无法导航到个人资料页面。");
+    router.push('/auth');
+  }
 };
 
-// 处理退出登录点击事件
 const handleLogout = () => {
-  // 假设 store 中有 logout action
   globalStore.logout();
-  console.log("用户退出登录");
   router.push({name: 'home'});
 };
 
-// 处理管理员面板点击事件
-const handleAdminPanel = () => {
-  router.push({name: 'admin'});
-};
-
-// 使用计算属性，使其响应式地从 store 中获取 isAdmin 状态
 const isAdmin = computed(() => globalStore.isAdmin);
 </script>
 
@@ -44,14 +48,12 @@ const isAdmin = computed(() => globalStore.isAdmin);
   <el-header class="app-header">
     <div class="header-content">
       <router-link to="/" class="logo">
-        <!-- 正确使用图标组件 -->
         <el-icon :size="24">
           <ForkSpoon/>
         </el-icon>
         <span>食谱论坛</span>
       </router-link>
 
-      <!-- 改进搜索栏，增加可点击的按钮 -->
       <div class="search-bar">
         <el-input
             v-model="searchInput"
@@ -65,26 +67,26 @@ const isAdmin = computed(() => globalStore.isAdmin);
         </el-input>
       </div>
 
-      <el-menu default-active="/" mode="horizontal" :ellipsis="false" router class="nav-menu">
+      <el-menu :default-active="activeMenuIndex" mode="horizontal" :ellipsis="false" router class="nav-menu">
         <el-menu-item index="/">首页</el-menu-item>
-        <!-- 登录前显示'登录/注册' -->
         <template v-if="!globalStore.isAuthenticated">
           <el-menu-item index="/auth" class="auth-button">
             登录 / 注册
           </el-menu-item>
         </template>
-        <!-- 登录后显示'分享食谱'和'我的收藏' -->
         <template v-else>
           <el-menu-item index="/create">分享食谱</el-menu-item>
           <el-menu-item index="/favorites">我的收藏</el-menu-item>
-          <el-sub-menu :index="globalStore.username || 'user'" class="user-profile">
+          <el-menu-item v-if="isAdmin" index="/admin">管理员面板</el-menu-item>
+
+          <!-- 校正结构: 将个人资料、退出登录等都放入用户下拉菜单中 -->
+          <el-sub-menu index="/profile" class="user-profile">
             <template #title>{{ globalStore.username || '用户名' }}</template>
             <el-menu-item @click="handleProfile">个人资料</el-menu-item>
             <el-menu-item @click="handleLogout">退出登录</el-menu-item>
-            <el-menu-item v-if="isAdmin" index="/admin">管理员面板</el-menu-item>
+
           </el-sub-menu>
         </template>
-        <!-- 主题切换开关 -->
         <el-switch
             :model-value="globalStore.theme === 'dark'"
             @change="globalStore.toggleTheme"

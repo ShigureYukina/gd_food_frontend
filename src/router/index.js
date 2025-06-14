@@ -37,17 +37,24 @@ const router = createRouter({
         },
         {
             path: '/search',
-            name: 'search',
+            name: 'search-results', // 保持与页头组件中 handleSearch 的命名一致
             component: () => import('../views/SearchResultsView.vue'),
             meta: {title: '搜索结果'}
         },
         {
-            // 新增的管理员审核页面路由
             path: '/admin',
             name: 'admin',
-            component: () => import('../views/AdminView.vue')
+            component: () => import('../views/AdminView.vue'),
+            meta: {title: '管理员面板'}
         },
-
+        {
+            // 修复: 更改此路由以匹配导航逻辑
+            path: '/profile/:userId', // 1. 改为动态路径，接收 userId 参数
+            name: 'profile',         // 2. 将名称从 'user' 改为 'profile'
+            component: () => import('../views/Users.vue'), // 假设 Users.vue 是个人资料页面
+            props: true,             // 3. 设置 props: true 以便将路由参数作为组件 prop 传递
+            meta: {title: '个人信息'}
+        },
         {
             path: '/:pathMatch(.*)*',
             name: 'NotFound',
@@ -55,7 +62,7 @@ const router = createRouter({
             meta: {title: '404 - 页面未找到'}
         }
     ],
-    // This function ensures the page scrolls to the top on navigation.
+    // 此函数确保在导航时页面滚动到顶部。
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition;
@@ -65,7 +72,7 @@ const router = createRouter({
     },
 })
 
-// Update the document title after each navigation.
+// 每次导航后更新文档标题。
 router.afterEach((to) => {
     document.title = to.meta.title || '食谱分享论坛';
 });

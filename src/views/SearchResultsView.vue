@@ -15,7 +15,7 @@
       <!-- Filter and Sort Controls - Only for Recipes -->
       <div v-if="activeTab === 'recipes'" class="controls-bar">
         <el-radio-group v-model="selectedCategory" size="large" class="category-filter">
-          <el-radio-button v-for="cat in categories" :key="cat" :label="cat" />
+          <el-radio-button v-for="cat in categories" :key="cat" :label="cat"/>
         </el-radio-group>
 
         <el-select v-model="sortBy" placeholder="排序方式" size="large" class="sort-select">
@@ -30,12 +30,12 @@
 
       <!-- Empty State for Recipes -->
       <div v-else-if="activeTab === 'recipes' && !filteredRecipes.length" class="empty-state">
-        <el-empty :description="`没有找到与 '${query}' 相关的食谱`" />
+        <el-empty :description="`没有找到与 '${query}' 相关的食谱`"/>
       </div>
 
       <!-- Empty State for Users -->
       <div v-else-if="activeTab === 'users' && !filteredUsers.length" class="empty-state">
-        <el-empty :description="`没有找到与 '${query}' 相关的用户`" />
+        <el-empty :description="`没有找到与 '${query}' 相关的用户`"/>
       </div>
 
       <!-- Search Results Lists -->
@@ -44,7 +44,7 @@
         <div v-show="activeTab === 'recipes'" class="results-container">
           <el-row :gutter="20">
             <el-col v-for="recipe in filteredRecipes" :key="recipe.id" :xs="24" :sm="12" :md="8" :lg="6">
-              <RecipeCard :recipe="recipe" />
+              <RecipeCard :recipe="recipe"/>
             </el-col>
           </el-row>
         </div>
@@ -57,7 +57,7 @@
               <!-- FIX: Redesigned user card for list view -->
               <el-card class="user-card-list-item">
                 <div class="user-info-wrapper">
-                  <el-avatar :size="80" :src="user.avatar" />
+                  <el-avatar :size="80" :src="user.avatar"/>
                   <div class="user-details">
                     <h3 class="username">{{ user.Username }}</h3>
                     <p class="user-meta">
@@ -80,9 +80,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRecipeStore } from '@/store/recipe';
+import {ref, computed, onMounted, watchEffect} from 'vue';
+import {useRoute} from 'vue-router';
+import {useRecipeStore} from '@/store/recipe';
 import RecipeCard from '@/components/RecipeCard.vue';
 import MOCK_DATA from '@/utils/mock-data'; // Import the full mock data
 

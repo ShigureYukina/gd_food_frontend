@@ -76,23 +76,23 @@ for (let i = 0; i < recipeCount; i++) {
 
 
     const recipe = {
-        'RecipeID': i + 1,
-        'UserID': Mock.Random.pick(users).UserID,
-        'Title': Mock.Random.ctitle(5, 15),
-        'Description': Mock.Random.cparagraph(1),
-        'Ingredients': JSON.stringify(ingredients),
-        'RecipetypeId': Mock.Random.pick([1, 2, 3, 4, 5]),
-        'RecipetypeName': Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']),
-        'Steps': JSON.stringify(steps),
-        'Difficulty': Mock.Random.pick(['简单', '中等', '困难']),
+        'RecipeID': i + 1, // 食谱的唯一ID，这里是递增的
+        'CoverImage': Mock.Random.pick(imageLinks), // 食谱封面图片，从预生成的图片链接池中随机选择一个
+        'UserID': Mock.Random.pick(users).UserID, // 食谱创建者的用户ID，从现有用户中随机选择
+        'Title': Mock.Random.ctitle(5, 15), // 食谱标题，5到15个中文字符
+        'Description': Mock.Random.cparagraph(1), // 食谱描述，1个中文段落
+        'Ingredients': JSON.stringify(ingredients), // 食谱所需食材，将 'ingredients' 对象转换为 JSON 字符串
+        'RecipetypeId': Mock.Random.pick([1, 2, 3, 4, 5]), // 食谱类型ID，随机选择
+        'RecipetypeName': Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']), // 食谱类型名称
+        'Steps': JSON.stringify(steps), // 食谱步骤，将 'steps' 对象转换为 JSON 字符串
+        'Difficulty': Mock.Random.pick(['简单', '中等', '困难']), // 烹饪难度
         // --- 新增字段 ---
-        // 为每个菜谱添加一个随机的审核状态
-        'Status': Mock.Random.pick(['pending', 'approved', 'rejected']),
-        'VideoLink': function () {
+        'Status': Mock.Random.pick(['pending', 'approved', 'rejected']), // 食谱审核状态：待处理、已通过、已拒绝
+        'VideoLink': function () { // 可选的视频链接，约30%的食谱会有视频
             return Math.random() < 0.3 ? 'https://www.example.com/video/' + Mock.Random.word(10) : null;
         },
-        'ImageLinks': JSON.stringify(imageLinks),
-        'UploadTime': Mock.Random.datetime("yyyy-MM-dd"),
+        'ImageLinks': JSON.stringify(imageLinks), // 食谱相关图片链接，将 'imageLinks' 数组转换为 JSON 字符串
+        'UploadTime': Mock.Random.datetime("yyyy-MM-dd"), // 食谱上传时间
     };
     recipes.push(recipe);
 }
@@ -114,17 +114,19 @@ const stories = recipes.map(recipe => {
 // --- 4. 生成评价数据 (Reviews Table) ---
 const reviews = [];
 recipes.forEach(recipe => {
+    // Generate a random number of reviews for each recipe (between 0 and 8)
     const reviewCount = Mock.Random.integer(0, 8);
     for (let i = 0; i < reviewCount; i++) {
         reviews.push(Mock.mock({
-            'ReviewID|+1': (reviews.length + 1),
-            'UserID': Mock.Random.pick(users).UserID,
-            'RecipeID': recipe.RecipeID,
-            'Rating': '@integer(1, 5)',
+            'ReviewID|+1': (reviews.length + 1), // Incremental ReviewID
+            'UserID': Mock.Random.pick(users).UserID, // Randomly pick a UserID from existing users
+            'RecipeID': recipe.RecipeID, // Associate the review with the current recipe
+            'Rating': '@integer(1, 5)', // Random rating between 1 and 5
             'Comment': function () {
+                // Randomly generate a comment or return null
                 return Math.random() < 0.85 ? Mock.mock('@csentence(10, 50)') : null;
             },
-            'ReviewTime': '@datetime("yyyy-MM-dd")'
+            'ReviewTime': '@datetime("yyyy-MM-dd")' // Generate review time
         }));
     }
 });
@@ -134,17 +136,21 @@ recipes.forEach(recipe => {
 const collections = [];
 const collectionSet = new Set();
 users.forEach(user => {
+    // 为每个用户生成收藏数量，最多为食谱总数的一半
     const collectionCount = Mock.Random.integer(0, Math.floor(recipeCount / 2));
+    // 随机打乱所有现有食谱
     const shuffledRecipes = Mock.Random.shuffle([...recipes]);
 
+    // 遍历打乱后的食谱，为当前用户添加收藏
     for (let i = 0; i < collectionCount && i < shuffledRecipes.length; i++) {
-        const recipe = shuffledRecipes[i];
+        const recipe = shuffledRecipes[i]; // <--- 关键点：这里从现有食谱中获取
         const uniqueKey = `${user.UserID}-${recipe.RecipeID}`;
 
+        // 确保不会重复收藏同一个食谱
         if (!collectionSet.has(uniqueKey)) {
             collections.push(Mock.mock({
                 'UserID': user.UserID,
-                'RecipeID': recipe.RecipeID,
+                'RecipeID': recipe.RecipeID, // <--- 关键点：这里使用的是现有食谱的 ID
                 'CollectionTime': '@datetime("yyyy-MM-dd")',
                 'Notes': function () {
                     return Math.random() < 0.4 ? Mock.mock('@csentence(5, 20)') : null;

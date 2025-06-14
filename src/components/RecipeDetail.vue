@@ -71,7 +71,7 @@
 
   </div>
   <div v-else class="placeholder">
-    <p>请从左侧列表中选择一个菜谱进行审核。</p>
+    <p>请从左侧列表中选择一个菜谱进行编辑。</p>
   </div>
 </template>
 

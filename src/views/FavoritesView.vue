@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useRecipeStore } from '@/store/recipe';
+import {computed, onMounted} from 'vue';
+import {useRecipeStore} from '@/store/recipe';
 import RecipeCard from '@/components/RecipeCard.vue';
 
 const recipeStore = useRecipeStore();
@@ -13,7 +13,7 @@ onMounted(() => {
 
 <template>
   <div class="favorites-view">
-    <el-page-header @back="$router.back()" content="我的收藏" class="page-header" />
+    <el-page-header @back="$router.back()" content="我的收藏" class="page-header"/>
 
     <div v-if="recipeStore.isLoading" v-loading="true" class="loading-state"></div>
 
@@ -23,7 +23,7 @@ onMounted(() => {
           :key="recipe.id"
           :xs="24" :sm="12" :md="8" :lg="6"
       >
-        <RecipeCard :recipe="recipe" />
+        <RecipeCard :recipe="recipe"/>
       </el-col>
     </el-row>
 
@@ -39,12 +39,15 @@ onMounted(() => {
   margin: 20px auto;
   padding: 0 20px;
 }
+
 .page-header {
   margin-bottom: 20px;
 }
+
 .el-col {
   margin-bottom: 20px;
 }
+
 .loading-state {
   height: 50vh;
 }

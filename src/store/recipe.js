@@ -1,60 +1,40 @@
-import {defineStore} from 'pinia'
+import {defineStore} from 'pinia';
 import {ElMessage} from 'element-plus';
-// 假设 'global' store 用于管理全局状态，例如当前登录的用户信息
 import {useGlobalStore} from './global';
-// 引入我们之前创建的、带有审核状态的模拟数据
+import {userService} from '../services/userService'; // 引入 userService
 import MOCK_DATA from '../utils/mock-data';
 
 export const useRecipeStore = defineStore("recipe", {
     state: () => ({
-        // 存储所有菜谱的列表
         recipes: [],
-        // 存储每个菜谱下的评论，以 recipeId 为键
         comments: {},
-        // 全局加载状态，用于在数据获取时显示加载指示器
         isLoading: false,
-        // 从 localStorage 中恢复用户点赞过的菜谱ID列表
         likedRecipeIds: JSON.parse(localStorage.getItem('likedRecipeIds')) || [],
-        // 从 localStorage 中恢复用户收藏过的菜谱ID列表
         favoriteRecipeIds: JSON.parse(localStorage.getItem('favoriteRecipeIds')) || [],
     }),
     getters: {
-        // 根据ID查找并返回单个菜谱对象
         getRecipeById: (state) => (id) => {
-            // 注意：传入的ID可能是数字或字符串，因此进行统一的字符串比较
             return state.recipes.find(r => String(r.id) === String(id));
         },
-        // 根据菜谱ID获取其对应的所有评论
         getCommentsByRecipeId: (state) => (recipeId) => {
             return state.comments[recipeId] || [];
         },
-        // 获取当前用户收藏的所有菜谱
         favoriteRecipes: (state) => {
             return state.recipes.filter(r => state.favoriteRecipeIds.includes(r.id));
         },
-        // 检查某个菜谱是否已被当前用户收藏
         isFavorite: (state) => (recipeId) => {
             return state.favoriteRecipeIds.includes(recipeId);
         },
-        // 检查某个菜谱是否已被当前用户点赞
         isLiked: (state) => (recipeId) => {
             return state.likedRecipeIds.includes(recipeId);
         },
     },
     actions: {
-        // 异步获取并处理所有菜谱数据
         async fetchRecipes() {
-            // 如果已有数据，则不再重复获取，避免不必要的API调用
             if (this.recipes.length > 0) return;
             this.isLoading = true;
             try {
-                // 模拟网络请求延迟
                 await new Promise(res => setTimeout(res, 500));
-
-                const userMap = MOCK_DATA.users.reduce((acc, user) => {
-                    acc[user.UserID] = user.Username;
-                    return acc;
-                }, {});
 
                 const favoriteCounts = MOCK_DATA.collections.reduce((acc, collection) => {
                     acc[collection.RecipeID] = (acc[collection.RecipeID] || 0) + 1;
@@ -85,7 +65,7 @@ export const useRecipeStore = defineStore("recipe", {
                         difficulty: recipe.Difficulty,
                         createdAt: recipe.UploadTime,
                         authorId: recipe.UserID,
-                        authorName: userMap[recipe.UserID] || '匿名用户',
+                        authorName: userService.getUserName(recipe.UserID), // 使用 userService
                         coverImage: coverImage,
                         likes: Math.floor(Math.random() * 200),
                         favorites: favoriteCounts[recipe.RecipeID] || 0,
@@ -103,7 +83,7 @@ export const useRecipeStore = defineStore("recipe", {
                         commentId: review.ReviewID,
                         recipeId: review.RecipeID,
                         userId: review.UserID,
-                        username: userMap[review.UserID] || '匿名用户',
+                        username: userService.getUserName(review.UserID), // 使用 userService
                         content: review.Comment,
                         createdAt: review.ReviewTime,
                         rating: review.Rating,
@@ -136,11 +116,14 @@ export const useRecipeStore = defineStore("recipe", {
         },
         addComment(recipeId, commentContent) {
             const globalStore = useGlobalStore();
+            const currentUser = userService.getUserById(globalStore.userId); // 使用 userService
+
             const newComment = {
                 commentId: 'comment-' + Date.now(),
                 recipeId,
                 userId: globalStore.userId,
-                username: '我',
+                username: userService.getUserName(globalStore.userId), // 使用 userService
+                avatar: userService.getUserAvatar(globalStore.userId), // 使用 userService
                 content: commentContent,
                 createdAt: new Date().toISOString().slice(0, 10),
             };
@@ -178,11 +161,9 @@ export const useRecipeStore = defineStore("recipe", {
             }
             localStorage.setItem('favoriteRecipeIds', JSON.stringify(this.favoriteRecipeIds));
         },
-        // 更新菜谱的审核状态
         updateRecipeStatus({recipeId, newStatus}) {
             const recipe = this.recipes.find(r => r.id === recipeId);
             if (recipe) {
-                // 检查新状态是否有效
                 if (['approved', 'rejected', 'pending'].includes(newStatus)) {
                     recipe.status = newStatus;
                 } else {
@@ -194,3 +175,6 @@ export const useRecipeStore = defineStore("recipe", {
         },
     },
 });
+
+
+
