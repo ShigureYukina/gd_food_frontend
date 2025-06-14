@@ -1,5 +1,5 @@
 <script setup>
-import {ref} from 'vue';
+import {ref, computed} from 'vue';
 import {useGlobalStore} from '@/store/global';
 import {useRouter} from 'vue-router';
 // 导入所有需要的图标组件
@@ -13,8 +13,9 @@ const handleSearch = () => {
   if (!searchInput.value.trim()) {
     return;
   }
-  // FIX: 将查询参数从 'search' 修改为 'q'，使URL更简洁 (例如: /search?q=keyword)
-  router.push({name: 'search', query: {q: searchInput.value}});
+  // 修正: 将查询参数从 'search' 修改为 'q'，使URL更简洁 (例如: /search?q=keyword)
+  router.push({name: 'search-results', query: {q: searchInput.value}});
+  searchInput.value = '';
 };
 
 // 处理个人资料点击事件
@@ -24,14 +25,20 @@ const handleProfile = () => {
 
 // 处理退出登录点击事件
 const handleLogout = () => {
+  // 假设 store 中有 logout action
   globalStore.logout();
+  console.log("用户退出登录");
   router.push({name: 'home'});
 };
 
 // 处理管理员面板点击事件
 const handleAdminPanel = () => {
   router.push({name: 'admin'});
-};</script>
+};
+
+// 使用计算属性，使其响应式地从 store 中获取 isAdmin 状态
+const isAdmin = computed(() => globalStore.isAdmin);
+</script>
 
 <template>
   <el-header class="app-header">
@@ -60,19 +67,24 @@ const handleAdminPanel = () => {
 
       <el-menu default-active="/" mode="horizontal" :ellipsis="false" router class="nav-menu">
         <el-menu-item index="/">首页</el-menu-item>
-        <el-menu-item index="/create">分享食谱</el-menu-item>
-        <el-menu-item index="/favorites">我的收藏</el-menu-item>
-        <!-- 新增：登录/注册入口 -->
-        <el-menu-item index="/login-register" class="auth-button">
-          登录 / 注册
-        </el-menu-item>
-        <!-- 新增：用户状态显示 -->
-        <el-sub-menu v-if="globalStore.isAuthenticated" :index="globalStore.username" class="user-profile">
-          <template #title>{{ globalStore.username }}</template>
-          <el-menu-item @click="handleProfile">个人资料</el-menu-item>
-          <el-menu-item @click="handleLogout">退出登录</el-menu-item>
-          <el-menu-item v-if="globalStore.isAdmin" @click="handleAdminPanel">管理员面板</el-menu-item>
-        </el-sub-menu>
+        <!-- 登录前显示'登录/注册' -->
+        <template v-if="!globalStore.isAuthenticated">
+          <el-menu-item index="/auth" class="auth-button">
+            登录 / 注册
+          </el-menu-item>
+        </template>
+        <!-- 登录后显示'分享食谱'和'我的收藏' -->
+        <template v-else>
+          <el-menu-item index="/create">分享食谱</el-menu-item>
+          <el-menu-item index="/favorites">我的收藏</el-menu-item>
+          <el-sub-menu :index="globalStore.username || 'user'" class="user-profile">
+            <template #title>{{ globalStore.username || '用户名' }}</template>
+            <el-menu-item @click="handleProfile">个人资料</el-menu-item>
+            <el-menu-item @click="handleLogout">退出登录</el-menu-item>
+            <el-menu-item v-if="isAdmin" index="/admin">管理员面板</el-menu-item>
+          </el-sub-menu>
+        </template>
+        <!-- 主题切换开关 -->
         <el-switch
             :model-value="globalStore.theme === 'dark'"
             @change="globalStore.toggleTheme"
@@ -87,6 +99,19 @@ const handleAdminPanel = () => {
 </template>
 
 <style scoped>
+/* 定义CSS变量以支持主题切换 */
+:root {
+  --header-bg-color: #ffffff;
+  --border-color: #e4e7ed;
+  --el-text-color-primary: #303133;
+}
+
+html.dark {
+  --header-bg-color: #141414;
+  --border-color: #424242;
+  --el-text-color-primary: #E5EAF3;
+}
+
 .app-header {
   position: fixed;
   top: 0;
@@ -96,6 +121,7 @@ const handleAdminPanel = () => {
   border-bottom: 1px solid var(--border-color);
   z-index: 1000;
   padding: 0 20px;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .header-content {
@@ -130,6 +156,11 @@ const handleAdminPanel = () => {
   background-color: transparent;
 }
 
+.html.dark .nav-menu {
+  --el-menu-text-color: #E5EAF3;
+  --el-menu-hover-text-color: #409EFF;
+}
+
 .auth-button {
   display: flex;
   align-items: center;
@@ -161,10 +192,17 @@ const handleAdminPanel = () => {
   background-color: var(--el-color-primary-light-9);
 }
 
+.html.dark .user-profile .el-sub-menu__title:hover {
+  background-color: #262727;
+}
+
+
 .theme-switch {
   display: flex;
   align-items: center;
   margin-left: 20px;
   height: 100%;
+  --el-switch-on-color: #2C2C2C;
+  --el-switch-off-color: #F2F2F2;
 }
 </style>

@@ -85,6 +85,9 @@ for (let i = 0; i < recipeCount; i++) {
         'RecipetypeName': Mock.Random.pick(['西餐', '中餐', '面食', '粥类', '汤类']),
         'Steps': JSON.stringify(steps),
         'Difficulty': Mock.Random.pick(['简单', '中等', '困难']),
+        // --- 新增字段 ---
+        // 为每个菜谱添加一个随机的审核状态
+        'Status': Mock.Random.pick(['pending', 'approved', 'rejected']),
         'VideoLink': function () {
             return Math.random() < 0.3 ? 'https://www.example.com/video/' + Mock.Random.word(10) : null;
         },

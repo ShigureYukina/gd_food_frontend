@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRecipeStore } from '@/store/recipe';
+import {computed, onMounted} from 'vue';
+import {useRoute} from 'vue-router';
+import {useRecipeStore} from '@/store/recipe';
 
 // 導入子組件
 import RecipeStory from '@/components/RecipeStory.vue';

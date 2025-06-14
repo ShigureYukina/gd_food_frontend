@@ -30,16 +30,24 @@ const router = createRouter({
             meta: {title: '我的收藏'}
         },
         {
-            path: '/login-register',
+            path: '/auth',
             name: 'auth',
             component: () => import('../views/AuthView.vue'),
             meta: {title: '登录 / 注册'}
         },
-        {path: '/search',
+        {
+            path: '/search',
             name: 'search',
             component: () => import('../views/SearchResultsView.vue'),
             meta: {title: '搜索结果'}
         },
+        {
+            // 新增的管理员审核页面路由
+            path: '/admin',
+            name: 'admin',
+            component: () => import('../views/AdminView.vue')
+        },
+
         {
             path: '/:pathMatch(.*)*',
             name: 'NotFound',
