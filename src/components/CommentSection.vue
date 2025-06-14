@@ -1,6 +1,7 @@
 <script setup>
-import {ref, computed} from 'vue';
-import {useRecipeStore} from '@/store/recipe';
+import { ref, computed, onMounted } from 'vue';
+import { useRecipeStore } from '@/store/recipe';
+import { useGlobalStore } from '@/store/global';
 
 const props = defineProps({
   recipeId: {
@@ -10,6 +11,7 @@ const props = defineProps({
 });
 
 const recipeStore = useRecipeStore();
+const globalStore = useGlobalStore();
 const newComment = ref('');
 
 const comments = computed(() => recipeStore.getCommentsByRecipeId(props.recipeId));
@@ -29,7 +31,7 @@ const formatTime = (isoString) => {
 </script>
 
 <template>
-  <div class="comment-section">
+  <div v-if="globalStore.isAuthenticated" class="comment-section">
     <h3>评论区 ({{ comments.length }})</h3>
     <el-card v-if="comments.length > 0" class="comment-list">
       <div v-for="comment in comments" :key="comment.commentId" class="comment-item">
@@ -39,7 +41,7 @@ const formatTime = (isoString) => {
               <UserFilled/>
             </el-icon>
             {{ comment.username }}</strong>
-          <span class="time">{{comment.createdAt }}</span>
+          <span class="time">{{ comment.createdAt }}</span>
         </div>
         <el-rate v-model="comment.rating" disabled style="margin-bottom: 10px;"/>
         <p class="comment-content">{{ comment.content }}</p>
@@ -56,6 +58,10 @@ const formatTime = (isoString) => {
       />
       <el-button type="primary" @click="submitComment" style="margin-top: 10px;">发表评论</el-button>
     </div>
+  </div>
+  <div v-else class="comment-section">
+    <h3>评论区</h3>
+    <el-empty description="请先登录以查看和发表评论"/>
   </div>
 </template>
 

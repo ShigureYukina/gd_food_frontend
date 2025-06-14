@@ -61,6 +61,9 @@ export const useRecipeStore = defineStore("recipe", {
                         console.error(`Error parsing image links for recipe ${recipe.RecipeID}:`, e);
                     }
 
+                    // 从 MOCK_DATA.stories 中查找对应的故事
+                    const storyData = MOCK_DATA.stories.find(s => s.RecipeID === recipe.RecipeID);
+
                     return {
                         id: recipe.RecipeID,
                         title: recipe.Title,
@@ -76,6 +79,8 @@ export const useRecipeStore = defineStore("recipe", {
                         coverImage: coverImage,
                         likes: Math.floor(Math.random() * 200),
                         favorites: favoriteCounts[recipe.RecipeID] || 0,
+                        // 添加 story 字段
+                        story: storyData ? `${storyData.HistoricalContext}\n\n${storyData.CulturalSignificance || ''}`.trim() : null,
                     };
                 });
 

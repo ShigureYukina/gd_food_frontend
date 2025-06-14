@@ -46,13 +46,18 @@ const isFavorite = computed(() => recipeStore.isFavorite(props.id));
               <span>分类ID: {{ recipe.recipetypeid || '未知ID' }}</span>
               <span>分类名称: {{ recipe.recipetypename || '未知类型' }}</span>
             </div>
-            <div class="recipe-detail-content">
-              <p class="description">{{ recipe.description }}</p>
-            </div>
+            <p class="description">{{ recipe.description }}</p>
           </div>
         </el-card>
 
-        <RecipeStory :recipe="recipe" />
+        <el-card v-if="recipe.story" class="story-card">
+          <template #header>
+            <div class="card-header">
+              <h3>菜谱故事</h3>
+            </div>
+          </template>
+          <p class="story-content">{{ recipe.story }}</p>
+        </el-card>
 
         <el-card class="steps-card">
           <StepByStepGuide :steps="recipe.steps"/>
@@ -131,8 +136,19 @@ const isFavorite = computed(() => recipeStore.isFavorite(props.id));
   margin-top: 20px;
 }
 
-.steps-card, .comment-card, .actions-card, .ingredients-card {
+.steps-card, .comment-card, .actions-card, .ingredients-card, .story-card {
   margin-top: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.story-content {
+  line-height: 1.6;
+  color: #555;
 }
 
 .action-buttons {
