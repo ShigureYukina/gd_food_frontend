@@ -1,23 +1,28 @@
-const LOCAL_KEY = 'likedRecipeIds';
+// services/likeService.js
+const STORAGE_KEY = 'likedRecipeIds';
+
+function getLikedIds() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+}
+
+function isLiked(recipeId, likedIds) {
+    return likedIds.includes(recipeId);
+}
+
+function toggleLike(recipeId, likedIds) {
+    const index = likedIds.indexOf(recipeId);
+    let updated;
+    if (index > -1) {
+        updated = [...likedIds.slice(0, index), ...likedIds.slice(index + 1)];
+    } else {
+        updated = [...likedIds, recipeId];
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+}
 
 export const likeService = {
-    getLikedIds() {
-        return JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
-    },
-    toggleLike(recipeId, likedIds) {
-        const index = likedIds.indexOf(recipeId);
-        const updated = [...likedIds];
-
-        if (index > -1) {
-            updated.splice(index, 1);
-        } else {
-            updated.push(recipeId);
-        }
-
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(updated));
-        return updated;
-    },
-    isLiked(recipeId, likedIds) {
-        return likedIds.includes(recipeId);
-    }
+    getLikedIds,
+    isLiked,
+    toggleLike
 };

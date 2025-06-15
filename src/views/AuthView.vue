@@ -1,8 +1,9 @@
 <script setup>
 import {ref} from 'vue';
 import {ElMessage} from 'element-plus';
-import VerifyCode from '@/components/VerifyCode.vue';
-import {useGlobalStore} from '@/store/global';
+import VerifyCode from '@/components/base/VerifyCode.vue';
+import { userService } from '@/services/userService.js'; // 导入userService
+import {useGlobalStore} from '@/store/globalStore';
 import mockData from '@/utils/mock-data.js';
 import {useRouter} from 'vue-router'; // Import useRouter
 
@@ -58,25 +59,18 @@ const handleRegister = () => {
     return;
   }
 
-  // 模拟注册
-  const newUser = {
-    UserID: (mockData.users.length + 1).toString(), // Ensure UserID is a string for consistency
-    Username: registerForm.value.username,
-    Email: registerForm.value.email,
-    Password: registerForm.value.password,
-    Bio: '',
-    Avatar: 'https://picsum.photos/200/200?random=' + Math.random(),
-    isAdmin: false
-  };
+  const { username, email, password } = registerForm.value;
+  const result = userService.register({ username, email, password });
 
-  // Add to mock data (in a real app, this would be an API call)
-  mockData.users.push(newUser);
+  if (!result.success) {
+    ElMessage.error(result.message);
+    return;
+  }
 
-  globalStore.login(newUser);
-  ElMessage.success('注册成功');
-  redirectToHome(); // <--- Add redirection here
+  globalStore.login(result.user);
+  ElMessage.success(result.message);
+  redirectToHome();
 };
-
 const handleForgotPassword = () => {
   ElMessage.info('忘记密码功能暂未实现');
 };

@@ -1,40 +1,53 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue';
-import {useRecipeStore} from '@/store/recipe';
-import {useRouter, useRoute} from 'vue-router';
-import RecipeCard from '@/components/RecipeCard.vue';
-import Carousel from "@/components/Carousel.vue";
+import {recipeService} from '@/services/recipeService';
+import {useRouter} from 'vue-router';
+import RecipeCard from '@/components/recipe/RecipeCard.vue';
+import Carousel from "@/components/base/Carousel.vue";
 
-const recipeStore = useRecipeStore();
-const router = useRouter(); // 引入 router
-useRoute();
+const router = useRouter();
+
+const recipes = ref([]);
+const comments = ref({});
+const loading = ref(false);
+const error = ref(null);
+
 const category = ref('全部');
-ref('');
-// 搜索查询绑定
+const searchQuery = ref('');
 
-// 该计算属性生成筛选栏的分类列表
 const categories = computed(() => {
-  const all = new Set(recipeStore.recipes.map(r => r.recipetypename || '未知类型'));
-  return ['全部', ...all];
+  const allTypes = new Set(recipes.value.map(r => r.recipetypename || '未知类型'));
+  return ['全部', ...allTypes];
 });
 
-// FIX: 该计算属性现在只根据分类进行筛选
-// 搜索功能将通过跳转到专门的搜索页面来处理
 const filteredRecipes = computed(() => {
-  let recipes = recipeStore.recipes;
-
-  // 根据分类进行筛选
-  if (category.value && category.value !== '全部') {
-    recipes = recipes.filter(r => (r.recipetypename || '未知类型') === category.value);
+  if (category.value === '全部') {
+    return recipes.value;
   }
-
-  return recipes;
+  return recipes.value.filter(r => (r.recipetypename || '未知类型') === category.value);
 });
 
-// 新增：执行搜索并跳转到搜索结果页
-// 组件挂载时获取初始食谱数据
+function onSearch() {
+  if (!searchQuery.value.trim()) return;
+  router.push({name: 'SearchResults', query: {q: searchQuery.value.trim()}});
+}
+
+async function loadRecipes() {
+  loading.value = true;
+  error.value = null;
+  try {
+    const data = await recipeService.fetchRecipes();
+    recipes.value = data.recipes;
+    comments.value = data.comments;
+  } catch (e) {
+    error.value = e.message || '加载失败';
+  } finally {
+    loading.value = false;
+  }
+}
+
 onMounted(() => {
-  recipeStore.fetchRecipes();
+  loadRecipes();
 });
 </script>
 
@@ -42,7 +55,7 @@ onMounted(() => {
   <el-container class="home-view">
     <el-main>
       <!-- 轮播图组件 -->
-      <carousel :items="recipeStore.recipes.slice(0, 5) || []"/>
+      <carousel :items="recipes.slice(0, 5)"/>
 
       <el-affix :offset="60">
         <div class="filter-bar">
@@ -54,14 +67,17 @@ onMounted(() => {
       </el-affix>
 
       <!-- 加载状态 -->
-      <div v-if="recipeStore.isLoading" v-loading="true" class="loading-state"></div>
+      <div v-if="loading" v-loading="true" class="loading-state"></div>
 
       <!-- 食谱列表 -->
       <el-row v-else-if="filteredRecipes.length" :gutter="20">
         <el-col
             v-for="recipe in filteredRecipes"
             :key="recipe.id"
-            :xs="24" :sm="12" :md="8" :lg="6"
+            :xs="24"
+            :sm="12"
+            :md="8"
+            :lg="6"
         >
           <RecipeCard :recipe="recipe"/>
         </el-col>

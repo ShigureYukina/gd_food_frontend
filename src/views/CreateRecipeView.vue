@@ -1,12 +1,10 @@
 <script setup>
 import {ref} from 'vue';
-import {useRecipeStore} from '@/store/recipe';
+import {recipeService} from '@/services/recipeService';
 import {useRouter} from 'vue-router';
 import {ElMessage} from 'element-plus';
 
-const recipeStore = useRecipeStore();
 const router = useRouter();
-
 const formRef = ref(null);
 const recipeForm = ref({
   title: '',
@@ -38,27 +36,66 @@ const removeStep = (index) => {
   recipeForm.value.steps.splice(index, 1);
 };
 
-const submitForm = async () => {
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      const finalData = {
-        ...recipeForm.value,
-        steps: recipeForm.value.steps.map((s, i) => ({stepNumber: i + 1, description: s.description}))
-      }
-      recipeStore.addRecipe(finalData);
-      router.push('/');
-    } else {
-      ElMessage.error('请检查表单是否填写完整');
-    }
+// 将 validate 包装成 Promise 方便 async/await 使用
+function validateForm() {
+  return new Promise((resolve) => {
+    formRef.value.validate((valid) => {
+      resolve(valid);
+    });
   });
+}
+
+const submitForm = async () => {
+  const valid = await validateForm();
+  if (!valid) {
+    ElMessage.error('请检查表单是否填写完整');
+    return;
+  }
+  const finalData = {
+    ...recipeForm.value,
+    steps: recipeForm.value.steps.map((s, i) => ({stepNumber: i + 1, description: s.description})),
+  };
+  try {
+    await recipeService.addRecipe(finalData);
+    ElMessage.success('食谱发布成功');
+    router.push('/');
+  } catch (error) {
+    ElMessage.error('发布失败，请重试');
+  }
 };
+const fillTestData = () => {
+  recipeForm.value = {
+    title: '红烧肉',
+    description: '经典的红烧肉做法，肥而不腻，入口即化。',
+    category: '家常菜',
+    difficulty: '中等',
+    prepTime: 60,
+    story: '这道红烧肉是我奶奶传给我的家传秘方。',
+    ingredients: [
+      { name: '五花肉', quantity: '500g' },
+      { name: '生姜', quantity: '适量' },
+      { name: '冰糖', quantity: '30g' },
+    ],
+    steps: [
+      { description: '五花肉切块，焯水备用。' },
+      { description: '锅中放油，加入冰糖炒糖色。' },
+      { description: '加入五花肉煸炒上色，加入调味料炖煮。' },
+    ],
+  };
+  console.log('已填充测试数据:', JSON.stringify(recipeForm.value, null, 2));
+};
+
 </script>
+
 
 <template>
   <div class="create-view">
     <el-card>
       <template #header>
         <h2>分享你的美味食谱</h2>
+        <el-button type="warning" size="small" @click="fillTestData" style="margin-left: 20px;">
+          一键填充测试数据
+        </el-button>
       </template>
       <el-form ref="formRef" :model="recipeForm" :rules="rules" label-width="100px">
         <el-form-item label="食谱标题" prop="title">
@@ -131,6 +168,7 @@ const submitForm = async () => {
         </el-form-item>
       </el-form>
     </el-card>
+
   </div>
 </template>
 

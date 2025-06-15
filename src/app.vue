@@ -1,9 +1,11 @@
 <script setup>
 import {onMounted} from 'vue';
-import AppHeader from './components/AppHeader.vue';
-import {useGlobalStore} from './store/global';
+import AppHeader from './components/layout/AppHeader.vue';
+import {useGlobalStore} from './store/globalStore';
+
 
 const globalStore = useGlobalStore();
+globalStore.initAuth()
 
 onMounted(() => {
   globalStore.initTheme();

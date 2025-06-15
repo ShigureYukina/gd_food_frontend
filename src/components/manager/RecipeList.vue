@@ -1,7 +1,61 @@
+<script setup>
+import {computed, defineProps, defineEmits} from 'vue';
+
+const props = defineProps({
+  recipes: {
+    type: Array,
+    required: true,
+  },
+  selectedRecipeId: {
+    type: Number,
+    default: null,
+  },
+  selectedStatus: { // 接收父组件传递的筛选状态
+    type: String,
+    default: '', // 默认为空字符串，表示“全部”
+  },
+});
+
+const emit = defineEmits(['select-recipe', 'update:selectedStatus']); // 声明发射事件
+const handleTabClick = (status) => {
+  emit('update:selectedStatus', status); // 发出事件，父组件更新
+};
+const statusOptions = [
+  {label: '全部', value: ''},
+  {label: '待审核', value: 'pending'},
+  {label: '已通过', value: 'approved'},
+  {label: '已拒绝', value: 'rejected'},
+];
+
+const filteredRecipes = computed(() => {
+  // 注意：这里不再需要额外的过滤逻辑，因为父组件 AuditDashboard 已经根据 selectedFilterStatus 过滤了数据。
+  // props.recipes 已经是经过父组件筛选后的结果。
+  return props.recipes;
+});
+
+const selectRecipe = (recipe) => {
+  emit('select-recipe', recipe);
+};
+
+// 使用 computed 属性的 getter 和 setter 来实现 v-model 的效果
+const selectedStatusProxy = computed({
+  get() {
+    return props.selectedStatus;
+  },
+  set(value) {
+    emit('update:selectedStatus', value); // 当值改变时，发射事件通知父组件
+  },
+});
+</script>
+
 <template>
   <div class="recipe-list-container">
     <div style="margin-bottom: 15px;">
-      <el-select v-model="selectedStatus" placeholder="请选择审核状态" clearable>
+      <el-select
+          v-model="selectedStatusProxy"
+          placeholder="请选择审核状态"
+          clearable
+      >
         <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -10,62 +64,30 @@
         />
       </el-select>
     </div>
+
     <ul v-if="filteredRecipes.length > 0">
       <li
           v-for="recipe in filteredRecipes"
-          :key="recipe.RecipeID"
+          :key="recipe.id"
           @click="selectRecipe(recipe)"
-
           :class="[
-            'recipe-item',
-            `status-${recipe.Status}`,
-            { selected: selectedRecipeId === recipe.RecipeID }
-          ]"
+          'recipe-item',
+          `status-${recipe.status}`,
+          { selected: selectedRecipeId === recipe.id }
+        ]"
       >
-        <h4>{{ recipe.Title }}</h4>
-        <p>分类: {{ recipe.RecipetypeName }}</p>
-        <p>提交于: {{ recipe.UploadTime }}</p>
+        <h4>{{ recipe.title }}</h4>
+        <p>分类: {{ recipe.recipetypename }}</p>
+        <p>提交于: {{ recipe.createdAt }}</p>
       </li>
     </ul>
     <p v-else>没有符合当前筛选条件的菜谱。</p>
   </div>
 </template>
 
-<script setup>
-import {defineProps, defineEmits, computed} from 'vue';
 
-const props = defineProps({
-  recipes: {
-    type: Array,
-    required: true
-  },
-  selectedRecipeId: {
-    type: Number,
-    default: null
-  }
-});
 
-const emit = defineEmits(['select-recipe', 'update:selectedStatus']);
 
-const selectedStatus = defineModel('selectedStatus', {default: ''});
-const statusOptions = [
-  {label: '全部', value: ''},
-  {label: '待审核', value: 'pending'},
-  {label: '已通过', value: 'approved'},
-  {label: '已拒绝', value: 'rejected'}
-];
-
-const filteredRecipes = computed(() => {
-  if (!selectedStatus.value) {
-    return props.recipes;
-  }
-  return props.recipes.filter(recipe => recipe.Status === selectedStatus.value);
-});
-
-const selectRecipe = (recipe) => {
-  emit('select-recipe', recipe);
-};
-</script>
 
 <style scoped>
 .recipe-list-container div[style] {

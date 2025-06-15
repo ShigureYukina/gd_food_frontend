@@ -1,16 +1,16 @@
 <script setup>
-import {computed, onMounted} from 'vue';
+import {computed, ref, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
-import {useRecipeStore} from '@/store/recipe';
-
-// 導入子組件
-import RecipeStory from '@/components/RecipeStory.vue';
-import StepByStepGuide from '@/components/StepByStepGuide.vue';
-import CommentSection from '@/components/CommentSection.vue';
-import IngredientList from '@/components/IngredientList.vue';
+import {useGlobalStore} from '@/store/globalStore';
+import {recipeService} from '@/services/recipeService';
+import {favoriteService} from '@/services/favoriteService';
+import {likeService} from '@/services/likeService'; // 引入点赞服务
+import StepByStepGuide from '@/components/recipe/StepByStepGuide.vue';
+import CommentSection from '@/components/comment/CommentSection.vue';
+import IngredientList from '@/components/recipe/IngredientList.vue';
 
 const route = useRoute();
-const recipeStore = useRecipeStore();
+const globalStore = useGlobalStore();
 
 const props = defineProps({
   id: {
@@ -19,15 +19,64 @@ const props = defineProps({
   }
 });
 
+const currentUserId = computed(() => globalStore.userId);
+
 onMounted(() => {
-  recipeStore.fetchRecipes();
+  recipeService.fetchRecipes();
+  updateFavoriteState();
+  updateLikeState(); // 初始加载点赞状态
 });
 
-const recipe = computed(() => recipeStore.getRecipeById(props.id));
-const isLiked = computed(() => recipeStore.isLiked(props.id));
-const isFavorite = computed(() => recipeStore.isFavorite(props.id));
+const recipe = computed(() => recipeService.getRecipeById(props.id));
 
+const isFavorite = ref(false);
+const isLiked = ref(false);
+
+// 加载收藏状态
+async function updateFavoriteState() {
+  if (currentUserId.value && props.id) {
+    isFavorite.value = favoriteService.isFavorite(currentUserId.value, props.id);
+  }
+}
+
+// 加载点赞状态
+async function updateLikeState() {
+  if (currentUserId.value && props.id) {
+    isLiked.value = await likeService.isLiked(currentUserId.value, props.id);
+  }
+}
+
+// 切换收藏状态
+async function handleToggleFavorite() {
+  await favoriteService.toggleFavorite(currentUserId.value, props.id);
+  isFavorite.value = favoriteService.isFavorite(currentUserId.value, props.id);
+
+  const r = recipe.value;
+  if (r) {
+    if (isFavorite.value) {
+      r.favorites++;
+    } else {
+      r.favorites = Math.max(0, r.favorites - 1);
+    }
+  }
+}
+
+// 切换点赞状态
+async function handleToggleLike() {
+  await likeService.toggleLike(currentUserId.value, props.id);
+  isLiked.value = await likeService.isLiked(currentUserId.value, props.id);
+
+  const r = recipe.value;
+  if (r) {
+    if (isLiked.value) {
+      r.likes++;
+    } else {
+      r.likes = Math.max(0, r.likes - 1);
+    }
+  }
+}
 </script>
+
 
 <template>
   <div v-if="recipe" class="recipe-detail-view">
@@ -82,7 +131,7 @@ const isFavorite = computed(() => recipeStore.isFavorite(props.id));
               <el-button
                   :type="isFavorite ? 'warning' : 'default'"
                   :icon="'Star'"
-                  @click="recipeStore.toggleFavorite(recipe.id)"
+                  @click="handleToggleFavorite"
               >
                 {{ isFavorite ? '已收藏' : '收藏' }} ({{ recipe.favorites }})
               </el-button>

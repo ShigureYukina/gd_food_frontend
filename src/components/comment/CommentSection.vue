@@ -3,32 +3,20 @@
     <h3>评论区 ({{ comments.length }})</h3>
 
     <el-card v-if="isAuth && comments.length" class="comment-list">
-      <div
-          v-for="c in comments"
-          :key="c.commentId"
-          class="comment-item"
-      >
+      <div v-for="c in comments" :key="c.ReviewID" class="comment-item">
         <div class="comment-header">
-          <div
-              class="user-info-clickable"
-              @click="goToUserHomepage(c.userId)"
-          >
-            <el-avatar
-                :src="c.avatar || `https://i.pravatar.cc/150?u=${c.userId}`"
-                :fit="'cover'"
-            >
+          <div class="user-info-clickable" @click="goToUserHomepage(c.UserID)">
+            <el-avatar :src="c.avatar" :fit="'cover'">
               <el-icon>
                 <UserFilled/>
               </el-icon>
             </el-avatar>
             <strong>{{ c.username }}</strong>
           </div>
-          <span class="time">{{ formatTime(c.createdAt) }}</span>
+          <span class="time">{{ formatTime(c.ReviewTime) }}</span>
         </div>
-
-        <el-rate v-model="c.rating" disabled style="margin: 8px 0;"/>
-
-        <p class="comment-content">{{ c.content }}</p>
+        <el-rate v-model="c.Rating" disabled style="margin: 8px 0;"/>
+        <p class="comment-content">{{ c.Comment || '无评论内容' }}</p>
       </div>
     </el-card>
 
@@ -66,69 +54,61 @@
 </template>
 
 <script setup>
-import {ref, computed} from 'vue'
-import {useRouter} from 'vue-router' // 导入 useRouter
-import {useRecipeStore} from '@/store/recipe'
-import {useGlobalStore} from '@/store/global'
+import {ref, computed, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
 import {UserFilled} from '@element-plus/icons-vue'
+import {useGlobalStore} from '@/store/globalStore'
+import {commentService} from '@/services/commentService'
+import {userService} from '@/services/userService'
 
 const props = defineProps({
   recipeId: {type: String, required: true}
 })
 
-const recipeStore = useRecipeStore()
 const globalStore = useGlobalStore()
-const router = useRouter() // 获取路由器实例
+const router = useRouter()
 
+const comments = ref([])
 const newComment = ref('')
 const newRating = ref(0)
 
-// 当前用户是否已登录
 const isAuth = computed(() => globalStore.isAuthenticated)
 
-// 评论列表 - ：请确保 getCommentsByRecipeId 方法在获取评论时，为每个评论对象填充了 'avatar' 和 'userId' 字段。
-const comments = computed(() =>
-    recipeStore.getCommentsByRecipeId(props.recipeId)
-)
+// 异步加载评论
+onMounted(async () => {
+  comments.value = await commentService.getCommentsByRecipeId(props.recipeId)
+})
 
 // 时间格式化
 function formatTime(iso) {
   const d = new Date(iso)
-  return isNaN(d.getTime())
-      ? '时间未知'
-      : d.toLocaleString('zh-CN')
+  return isNaN(d.getTime()) ? '时间未知' : d.toLocaleString('zh-CN')
 }
 
-// 跳转到用户主页的函数
+// 跳转到用户主页
 function goToUserHomepage(userId) {
   if (userId) {
-    // 假设你的用户主页路由是 '/user/:userId'
-    // 确保你的路由配置中有一个名为 'UserHomepage' 且接受 userId 参数的路由
-    router.push({name: 'profile', params: {userId: userId}})
-    // 如果你的路由路径是 '/user/profile?id=xxx'，则可以使用 query：
-  } else {
-    console.warn('无法跳转：用户ID不存在。')
-    // 可以在这里给用户一个提示，例如：ElMessage.warning('用户ID缺失，无法查看主页。');
+    router.push({name: 'profile', params: {userId}})
   }
 }
 
 // 提交评论
-function submitComment() {
+async function submitComment() {
   if (!newComment.value.trim() || newRating.value <= 0) {
-    return alert('评论内容和评分不能为空！')
+    alert('评论内容和评分不能为空！');
+    return;
   }
-  // 假设 addComment 也需要当前用户的 userId 来完善评论数据
-  // 你可能需要从 globalStore 获取当前登录用户的 userId
-  const currentUserId = globalStore.userId; // 假设 globalStore 中有 userId
-  recipeStore.addComment(
-      props.recipeId,
-      newComment.value,
-      newRating.value,
-      currentUserId // 将当前用户ID传递给 addComment
-  )
-  newComment.value = ''
-  newRating.value = 0
+  try {
+    await commentService.addComment(props.recipeId, newComment.value, globalStore.userId, newRating.value);
+    newComment.value = '';
+    newRating.value = 0;
+    comments.value = await commentService.getCommentsByRecipeId(props.recipeId);
+  } catch (e) {
+    console.error(e);
+  }
 }
+
+
 </script>
 
 

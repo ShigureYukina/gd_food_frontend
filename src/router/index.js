@@ -51,7 +51,7 @@ const router = createRouter({
             // 修复: 更改此路由以匹配导航逻辑
             path: '/profile/:userId', // 1. 改为动态路径，接收 userId 参数
             name: 'profile',         // 2. 将名称从 'user' 改为 'profile'
-            component: () => import('../views/Users.vue'), // 假设 Users.vue 是个人资料页面
+            component: () => import('../views/Profile.vue'), // 假设 Profile.vue 是个人资料页面
             props: true,             // 3. 设置 props: true 以便将路由参数作为组件 prop 传递
             meta: {title: '个人信息'}
         },

@@ -1,7 +1,7 @@
 <script setup>
 import {ref, computed} from 'vue';
 import {useRouter, useRoute} from 'vue-router';
-import {useGlobalStore} from '@/store/global';
+import {useGlobalStore} from '@/store/globalStore';
 import {ForkSpoon, Search, Moon, Sunny} from '@element-plus/icons-vue';
 
 const globalStore = useGlobalStore();

@@ -1,5 +1,5 @@
 import Mock from "mockjs/dist/mock";
-
+//utils/mock-data.js
 // --- 1. 生成用户数据 (Users Table) ---
 
 // 定义一个固定的管理员用户
@@ -25,7 +25,7 @@ const regularUsers = Mock.mock({
             'isAdmin': false,
             'UserID|+1': 1,
             'Username': '@cword(2, 4)', // 中文用户名
-            'Password': /[a-z][0-10](10)/,
+            'Password': '@string("lower", 8)',
             'Email': '@email',
             'RegistrationTime': '@datetime("yyyy-MM-dd")',
             'LastLoginTime': function () {
@@ -114,7 +114,6 @@ const stories = recipes.map(recipe => {
 // --- 4. 生成评价数据 (Reviews Table) ---
 const reviews = [];
 recipes.forEach(recipe => {
-    // Generate a random number of reviews for each recipe (between 0 and 8)
     const reviewCount = Mock.Random.integer(0, 8);
     for (let i = 0; i < reviewCount; i++) {
         reviews.push(Mock.mock({

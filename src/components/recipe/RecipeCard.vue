@@ -1,11 +1,26 @@
 <script setup>
-defineProps({
+import {defineProps} from 'vue';
+import {
+  Picture,
+  User,
+  Calendar,
+  FolderOpened,
+  Star,
+  Pointer,
+} from '@element-plus/icons-vue';
+
+const {recipe} = defineProps({
   recipe: {
     type: Object,
     required: true,
   },
 });
 
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '未知时间'; // 修正：使用 getTime() 检查日期的有效性
+  return date.toLocaleDateString();
+}
 </script>
 
 <template>
@@ -26,18 +41,17 @@ defineProps({
         <h3 class="title">{{ recipe.title }}</h3>
         <p class="description">{{ recipe.description }}</p>
         <div class="meta">
-          <span><el-icon><User/></el-icon> {{ recipe.authorName }}</span>
-          <span><el-icon><Calendar/></el-icon> {{ recipe.createdAt }}</span>
+          <span><el-icon><User/></el-icon> {{ recipe.authorName || '未知作者' }}</span>
+          <span><el-icon><Calendar/></el-icon> {{ formatDate(recipe.createdAt) }}</span>
           <span><el-icon><FolderOpened/></el-icon> {{ recipe.recipetypename || '未知类型' }}</span>
         </div>
         <div class="stats">
-          <span><el-icon><Star/></el-icon> {{ recipe.favorites }}</span>
-          <span><el-icon><Pointer/></el-icon> {{ recipe.likes }}</span>
-        </div>
+          <span><el-icon><Star/></el-icon> {{ recipe.favorites || 0 }}</span> <span><el-icon><Pointer/></el-icon> {{ recipe.likes || 0 }}</span> </div>
       </div>
     </router-link>
   </el-card>
 </template>
+
 
 <style scoped>
 .recipe-card {

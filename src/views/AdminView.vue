@@ -5,8 +5,9 @@
       <div class="list-pane">
         <h3>菜谱列表</h3>
         <RecipeList
-            :recipes="pendingRecipes"
-            :selected-recipe-id="selectedRecipe?.RecipeID"
+            :recipes="filteredRecipes"
+            :selectedRecipeId="selectedRecipe?.id"
+            v-model:selectedStatus="selectedStatus"
             @select-recipe="handleRecipeSelection"
         />
       </div>
@@ -21,59 +22,72 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed} from 'vue';
-import mockData from '@/utils/mock-data'; // @ 是 src 目录的别名
-import RecipeList from '@/components/RecipeList.vue';
-import RecipeDetail from '@/components/RecipeDetail.vue';
+import { ref, onMounted, computed } from 'vue';
+import { recipeService } from '@/services/recipeService';
+import RecipeList from '@/components/manager/RecipeList.vue';
+import RecipeDetail from '@/components/manager/ManageRecipe.vue';
 
-// 使用 ref 创建响应式状态
+// 父组件：使用 ref 作为响应式变量
+const selectedStatus = ref('pending');
+
+
 const allRecipes = ref([]);
 const selectedRecipe = ref(null);
+const commentsByRecipeId = ref({});
 
-// onMounted 生命周期钩子，在组件挂载后执行
-onMounted(() => {
-  // 在真实应用中，这里会是 API 请求
-  // 为了演示，我们给每个菜谱添加一个 'status' 属性
-  allRecipes.value = mockData.recipes.map(recipe => ({
-    ...recipe,
-    status: 'pending'
-  }));
+onMounted(async () => {
+  try {
+    // Assuming fetchRecipes fetches all recipes regardless of status
+    const { recipes, comments } = await recipeService.fetchRecipes();
+    allRecipes.value = recipes;
+    commentsByRecipeId.value = comments;
+  } catch (error) {
+    console.error('加载菜谱失败', error);
+  }
 });
 
-// 计算属性，用于筛选出待审核的菜谱
-const pendingRecipes = computed(() => {
-  return allRecipes.value.filter(r => r.status === 'pending');
-});
+const filteredRecipes = computed(() =>
+    allRecipes.value.filter(recipe =>
+        selectedStatus.value === '' || recipe.status === selectedStatus.value
+    )
+);
 
-// 计算属性，为选中的菜谱附加作者和评价信息
 const selectedRecipeWithDetails = computed(() => {
   if (!selectedRecipe.value) return null;
-
-  const author = mockData.users.find(user => user.UserID === selectedRecipe.value.UserID);
-  const reviews = mockData.reviews.filter(review => review.RecipeID === selectedRecipe.value.RecipeID);
-
   return {
     ...selectedRecipe.value,
-    author,
-    reviews
+    reviews: commentsByRecipeId.value[selectedRecipe.value.id] || [],
   };
 });
 
-// 处理从 RecipeList 组件传来的 'select-recipe' 事件
 const handleRecipeSelection = (recipe) => {
+  console.log('选中菜谱:', recipe);
+  if (recipe && recipe.id) {
+    console.log('选中菜谱ID:', recipe.id);
+  } else {
+    console.warn('选中菜谱无效或无ID');
+  }
   selectedRecipe.value = recipe;
 };
 
-// 处理从 RecipeDetail 组件传来的 'update-status' 事件
-const handleRecipeStatusUpdate = (recipeId, newStatus) => {
-  const recipe = allRecipes.value.find(r => r.RecipeID === recipeId);
-  if (recipe) {
-    recipe.status = newStatus;
+
+const handleRecipeStatusUpdate = async (recipeId, newStatus) => {
+  const success = await recipeService.updateRecipeStatus(recipeId, newStatus);
+  if (success) {
+    const recipe = allRecipes.value.find(r => r.id === recipeId);
+    if (recipe) {
+      recipe.status = newStatus;
+    }
+    console.log(`菜谱ID ${recipeId} 状态已更新为: ${newStatus}`);
+    // The list will now automatically update.
+    // Clear the selection to show the placeholder.
+    selectedRecipe.value = null;
+  } else {
+    console.error('更新菜谱状态失败');
   }
-  // 操作完成后清空当前选择
-  selectedRecipe.value = null;
 };
 </script>
+
 
 <style scoped>
 .audit-dashboard {

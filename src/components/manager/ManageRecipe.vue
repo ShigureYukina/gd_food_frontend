@@ -1,7 +1,7 @@
 <template>
   <div class="recipe-detail-card" v-if="recipe">
     <div class="header">
-      <h2>{{ recipe.Title }}</h2>
+      <h2>{{ recipe.title }}</h2>
       <div class="actions">
         <el-popconfirm
             title="确定要批准这个菜谱吗?"
@@ -32,27 +32,29 @@
     </div>
 
     <div class="meta-info">
-      <span><strong>提交者:</strong> {{ recipe.author.Username }} ({{ recipe.author.Email }})</span>
-      <span><strong>难度:</strong> {{ recipe.Difficulty }}</span>
-      <span><strong>上传时间:</strong> {{ recipe.UploadTime }}</span>
+      <span><strong>提交者:</strong> {{ recipe.authorName }} ({{ recipe.authorEmail || '无邮箱' }})</span>
+      <span><strong>难度:</strong> {{ recipe.difficulty }}</span>
+      <span><strong>上传时间:</strong> {{ recipe.createdAt }}</span>
     </div>
 
     <div class="section">
       <h4>描述</h4>
-      <p>{{ recipe.Description }}</p>
+      <p>{{ recipe.description }}</p>
     </div>
 
     <div class="section">
       <h4>成品图</h4>
       <div class="image-gallery">
-        <img v-for="(img, index) in images" :key="index" :src="img" :alt="`菜谱图片 ${index + 1}`"/>
+        <!-- 如果coverImage是字符串，可以改成数组；如果只有一张图，用一个数组包裹 -->
+        <img v-for="(img, index) in recipe.coverImage ? [recipe.coverImage] : []"
+             :key="index" :src="img" :alt="`菜谱图片 ${index + 1}`"/>
       </div>
     </div>
 
     <div class="section">
-      <h4>食材 ({{ ingredients.length }})</h4>
+      <h4>食材 ({{ recipe.ingredients.length }})</h4>
       <ul>
-        <li v-for="(item, index) in ingredients" :key="index">
+        <li v-for="(item, index) in recipe.ingredients" :key="index">
           {{ item.name }} - {{ item.quantity }}
         </li>
       </ul>
@@ -61,14 +63,12 @@
     <div class="section">
       <h4>步骤</h4>
       <ol>
-        <li v-for="step in steps" :key="step.stepNumber">
+        <li v-for="step in recipe.steps" :key="step.stepNumber">
           <p>{{ step.description }}</p>
           <img v-if="step.image" :src="step.image" :alt="`步骤 ${step.stepNumber} 图片`" class="step-image"/>
         </li>
       </ol>
     </div>
-
-
   </div>
   <div v-else class="placeholder">
     <p>请从左侧列表中选择一个菜谱进行编辑。</p>
@@ -96,8 +96,9 @@ const images = computed(() => props.recipe ? JSON.parse(props.recipe.ImageLinks)
 // 此方法现在由 Popconfirm 的 confirm 事件调用
 const updateStatus = (status) => {
   if (!props.recipe) return;
-  emit('update-status', props.recipe.RecipeID, status);
+  emit('update-status', props.recipe.id, status);
 };
+
 </script>
 
 <style scoped>
